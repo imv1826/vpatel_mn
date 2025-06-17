@@ -1,0 +1,8 @@
+is_global = true
+build_property.RootNamespace = LSS.Xrm.CustomApis.ServiceAgreementDetailRecalc
+build_property.ProjectDir = C:\Client\VIMAL\Projects\LLSMN\PICS CE\Src\CustomApis\LSS.Xrm.CustomApis.ServiceAgreementDetailRecalc\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 
