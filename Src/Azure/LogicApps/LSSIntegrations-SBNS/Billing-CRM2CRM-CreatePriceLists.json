@@ -1,0 +1,313 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Retrieve_procedure_codes_with_no_price_list": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "commondataservice-1"
+                        }
+                    },
+                    "method": "get",
+                    "headers": {
+                        "prefer": "odata.include-annotations=*",
+                        "accept": "application/json;odata.metadata=full",
+                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                    },
+                    "path": "/api/data/v9.1/@{encodeURIComponent('products')}",
+                    "queries": {
+                        "fetchXml": "<fetch distinct='false' top='3'>\n  <entity name='product'>\n    <attribute name='productid' />\n    <filter type='and'>\n      <condition attribute='statecode' operator='eq' value='0' />\n      <condition attribute='pricelevelid' operator='null' />\n    </filter>\n  </entity>\n</fetch>"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Is_procedure_codes_found": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@empty(body('Retrieve_procedure_codes_with_no_price_list')?['value'])",
+                                "@false"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Retrieve_default_price_list": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent('pricelevels')}",
+                            "queries": {
+                                "$select": "pricelevelid",
+                                "$filter": "name eq 'Default'"
+                            }
+                        }
+                    },
+                    "Retrieve_default_unit_group": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent('uomschedules')}",
+                            "queries": {
+                                "$select": "uomscheduleid",
+                                "$filter": "name eq 'Default Unit'"
+                            }
+                        },
+                        "runAfter": {
+                            "Retrieve_default_price_list": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Retrieve_default_unit": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent('uoms')}",
+                            "queries": {
+                                "$select": "uomid",
+                                "$filter": "name eq 'Primary Unit'"
+                            }
+                        },
+                        "runAfter": {
+                            "Retrieve_default_unit_group": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Is_default_records_found": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@empty(body('Retrieve_default_price_list')?['value'])",
+                                        "@false"
+                                    ]
+                                },
+                                {
+                                    "equals": [
+                                        "@empty(body('Retrieve_default_unit_group')?['value'])",
+                                        "@false"
+                                    ]
+                                },
+                                {
+                                    "equals": [
+                                        "@empty(body('Retrieve_default_unit')?['value'])",
+                                        "@false"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "For_each_procedure_code": {
+                                "type": "foreach",
+                                "foreach": "@body('Retrieve_procedure_codes_with_no_price_list')?['value']",
+                                "actions": {
+                                    "Search_for_existing_price_list_item": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "commondataservice-1"
+                                                }
+                                            },
+                                            "method": "get",
+                                            "headers": {
+                                                "prefer": "odata.include-annotations=*",
+                                                "accept": "application/json;odata.metadata=full",
+                                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                            },
+                                            "path": "/api/data/v9.1/@{encodeURIComponent('productpricelevels')}",
+                                            "queries": {
+                                                "$filter": "_pricelevelid_value eq '@{body('Retrieve_default_price_list')?['value']?[0]?['pricelevelid']}' and _productid_value eq '@{item()?['productid']}'"
+                                            }
+                                        }
+                                    },
+                                    "Is_price_list_item_found": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@empty(body('Search_for_existing_price_list_item')?['value'])",
+                                                        "@false"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {},
+                                        "else": {
+                                            "actions": {
+                                                "Insert_new_price_list_item": {
+                                                    "type": "ApiConnection",
+                                                    "inputs": {
+                                                        "host": {
+                                                            "connection": {
+                                                                "referenceName": "commondataservice-1"
+                                                            }
+                                                        },
+                                                        "method": "post",
+                                                        "body": {
+                                                            "amount": 0,
+                                                            "percentage": 0,
+                                                            "pricingmethodcode": 1,
+                                                            "quantitysellingcode": 1,
+                                                            "roundingoptionamount": 0,
+                                                            "roundingoptioncode": 2,
+                                                            "roundingpolicycode": 1,
+                                                            "uomid@odata.bind": "/uoms(@{body('Retrieve_default_unit')?['value']?[0]?['uomid']})",
+                                                            "pricelevelid@odata.bind": "/pricelevels(@{body('Retrieve_default_price_list')?['value']?[0]?['pricelevelid']})",
+                                                            "productid@odata.bind": "/products(@{item()?['productid']})",
+                                                            "uomscheduleid@odata.bind": "/uomschedules(@{body('Retrieve_default_unit_group')?['value']?[0]?['uomscheduleid']})"
+                                                        },
+                                                        "headers": {
+                                                            "prefer": "return=representation,odata.include-annotations=*",
+                                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                        },
+                                                        "path": "/api/data/v9.1/@{encodeURIComponent('productpricelevels')}"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Search_for_existing_price_list_item": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    },
+                                    "Update_procedure_code_with_default_pricelist": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "commondataservice-1"
+                                                }
+                                            },
+                                            "method": "patch",
+                                            "body": {
+                                                "pricelevelid@odata.bind": "/pricelevels(@{body('Retrieve_default_price_list')?['value']?[0]?['pricelevelid']})"
+                                            },
+                                            "headers": {
+                                                "prefer": "return=representation,odata.include-annotations=*",
+                                                "accept": "application/json;odata.metadata=full",
+                                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                            },
+                                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('products'))}(@{encodeURIComponent(encodeURIComponent(item()?['productid']))})"
+                                        },
+                                        "runAfter": {
+                                            "Is_price_list_item_found": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Log_default_records_not_found_error": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "entityName": "integrationslog",
+                                            "message": {
+                                                "contentData": {
+                                                    "workflowName": "@{workflow().name}",
+                                                    "runId": "@{workflow().run.id}",
+                                                    "source": "dataverse",
+                                                    "sourceEntity": "",
+                                                    "sourceId": "",
+                                                    "target": "dataverse",
+                                                    "targetEntity": "",
+                                                    "targetId": "",
+                                                    "timestamp": "@{utcNow()}",
+                                                    "logLevel": "Error",
+                                                    "message": "Unable to find defult price list or default unit group or default unit in CRM."
+                                                },
+                                                "sessionId": "econnect"
+                                            }
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "serviceBus",
+                                            "operationId": "sendMessage",
+                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Retrieve_default_unit": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Retrieve_procedure_codes_with_no_price_list": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "Central Standard Time",
+                    "schedule": {
+                        "hours": [
+                            8
+                        ],
+                        "minutes": [
+                            0
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

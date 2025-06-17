@@ -1,0 +1,998 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Parse_Message_JSON": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@triggerBody()",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "contentData": {
+                                "type": "object",
+                                "properties": {
+                                    "initiatedOn": {
+                                        "type": "integer"
+                                    },
+                                    "messageName": {
+                                        "type": "string"
+                                    },
+                                    "logLevel": {
+                                        "type": "string"
+                                    },
+                                    "document": {
+                                        "type": "object",
+                                        "properties": {
+                                            "address1_addresstypecode": {
+                                                "type": "integer"
+                                            },
+                                            "address1_city": {
+                                                "type": "string"
+                                            },
+                                            "address1_composite": {
+                                                "type": "string"
+                                            },
+                                            "address1_line1": {
+                                                "type": "string"
+                                            },
+                                            "address1_postalcode": {
+                                                "type": "string"
+                                            },
+                                            "address2_addresstypecode": {
+                                                "type": "integer"
+                                            },
+                                            "address2_freighttermscode": {
+                                                "type": "integer"
+                                            },
+                                            "address2_shippingmethodcode": {
+                                                "type": "integer"
+                                            },
+                                            "adx_confirmremovepassword": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_identity_emailaddress1confirmed": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_identity_locallogindisabled": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_identity_lockoutenabled": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_identity_logonenabled": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_identity_mobilephoneconfirmed": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_identity_twofactorenabled": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_profilealert": {
+                                                "type": "boolean"
+                                            },
+                                            "adx_profileisanonymous": {
+                                                "type": "boolean"
+                                            },
+                                            "birthdate": {
+                                                "type": "string"
+                                            },
+                                            "contactid": {
+                                                "type": "string"
+                                            },
+                                            "createdby": {
+                                                "type": "string"
+                                            },
+                                            "createdon": {
+                                                "type": "string"
+                                            },
+                                            "creditonhold": {
+                                                "type": "boolean"
+                                            },
+                                            "customersizecode": {
+                                                "type": "integer"
+                                            },
+                                            "customertypecode": {
+                                                "type": "integer"
+                                            },
+                                            "donotbulkemail": {
+                                                "type": "boolean"
+                                            },
+                                            "donotbulkpostalmail": {
+                                                "type": "boolean"
+                                            },
+                                            "donotemail": {
+                                                "type": "boolean"
+                                            },
+                                            "donotfax": {
+                                                "type": "boolean"
+                                            },
+                                            "donotphone": {
+                                                "type": "boolean"
+                                            },
+                                            "donotpostalmail": {
+                                                "type": "boolean"
+                                            },
+                                            "donotsendmm": {
+                                                "type": "boolean"
+                                            },
+                                            "educationcode": {
+                                                "type": "integer"
+                                            },
+                                            "exchangerate": {
+                                                "type": "integer"
+                                            },
+                                            "firstname": {
+                                                "type": "string"
+                                            },
+                                            "followemail": {
+                                                "type": "boolean"
+                                            },
+                                            "fullname": {
+                                                "type": "string"
+                                            },
+                                            "gendercode": {
+                                                "type": "integer"
+                                            },
+                                            "haschildrencode": {
+                                                "type": "integer"
+                                            },
+                                            "isautocreate": {
+                                                "type": "boolean"
+                                            },
+                                            "isbackofficecustomer": {
+                                                "type": "boolean"
+                                            },
+                                            "isprivate": {
+                                                "type": "boolean"
+                                            },
+                                            "lastname": {
+                                                "type": "string"
+                                            },
+                                            "leadsourcecode": {
+                                                "type": "integer"
+                                            },
+                                            "marketingonly": {
+                                                "type": "boolean"
+                                            },
+                                            "merged": {
+                                                "type": "boolean"
+                                            },
+                                            "modifiedby": {
+                                                "type": "string"
+                                            },
+                                            "modifiedon": {
+                                                "type": "string"
+                                            },
+                                            "modifiedonbehalfby": {},
+                                            "msdyn_disablewebtracking": {
+                                                "type": "boolean"
+                                            },
+                                            "msdyn_gdproptout": {
+                                                "type": "boolean"
+                                            },
+                                            "msdyn_isassistantinorgchart": {
+                                                "type": "boolean"
+                                            },
+                                            "msdyn_isminor": {
+                                                "type": "boolean"
+                                            },
+                                            "msdyn_isminorwithparentalconsent": {
+                                                "type": "boolean"
+                                            },
+                                            "msdyn_orgchangestatus": {
+                                                "type": "integer"
+                                            },
+                                            "new_address1_addresstype": {
+                                                "type": "integer"
+                                            },
+                                            "new_businessexit": {
+                                                "type": "boolean"
+                                            },
+                                            "new_businessstatus": {
+                                                "type": "boolean"
+                                            },
+                                            "new_clientstatus": {
+                                                "type": "integer"
+                                            },
+                                            "new_eligibleforrehire": {
+                                                "type": "boolean"
+                                            },
+                                            "new_excludedduetobackgroundcheck": {
+                                                "type": "boolean"
+                                            },
+                                            "new_filelocation": {
+                                                "type": "integer"
+                                            },
+                                            "new_managingpartyid": {
+                                                "type": "string"
+                                            },
+                                            "new_pmi": {
+                                                "type": "string"
+                                            },
+                                            "new_primarylanguage": {
+                                                "type": "integer"
+                                            },
+                                            "new_spenddown": {
+                                                "type": "boolean"
+                                            },
+                                            "new_statenewhire": {
+                                                "type": "boolean"
+                                            },
+                                            "new_trainingrequired": {
+                                                "type": "integer"
+                                            },
+                                            "new_union": {
+                                                "type": "boolean"
+                                            },
+                                            "new_vendortaxtype": {
+                                                "type": "integer"
+                                            },
+                                            "new_workerscompensationrequired": {
+                                                "type": "boolean"
+                                            },
+                                            "ownerid": {
+                                                "type": "string"
+                                            },
+                                            "owningbusinessunit": {
+                                                "type": "string"
+                                            },
+                                            "participatesinworkflow": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_address1_countyid": {
+                                                "type": "string"
+                                            },
+                                            "pics_address1state": {
+                                                "type": "integer"
+                                            },
+                                            "pics_address2state": {
+                                                "type": "integer"
+                                            },
+                                            "pics_agreetoterms": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_alienauthorizedtowork": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_bgsform": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_blockaccesstolegacyportal": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_casemanager": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_client": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_consentdisclosure": {
+                                                "type": "integer"
+                                            },
+                                            "pics_consultationservice": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_consultationservices": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_contactid": {
+                                                "type": "string"
+                                            },
+                                            "pics_copyofid": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_directdepositentered": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_electronicw2authorized": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_employee": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_employmentstatus": {
+                                                "type": "integer"
+                                            },
+                                            "pics_exempt": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_feinholder": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_fmsagreementreceived": {
+                                                "type": "integer"
+                                            },
+                                            "pics_hasmultipleclients": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_interpreterneeded": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_isfeinholdersetupcomplete": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_isnoemail": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_lawfulpermanentresident": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_legalrep": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_leiechecked": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_lockedout": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_managingparty": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_minor": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_mpstatus": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_papertrainingrequired": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_payrolldocumentadded": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_pilotgroup": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_printspendingsummary": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_ptoaccrual": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_request_270_status": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_requirementscompleted": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_requirementscreated": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_safeathome": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_sickaccrual": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_ssnverified": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_supportplanner": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_sutastate": {
+                                                "type": "integer"
+                                            },
+                                            "pics_synchedtogp": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_text": {
+                                                "type": "integer"
+                                            },
+                                            "pics_uscitizen": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_vendor": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_vendorholdstatus": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_veteran": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_w4entered": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_w9": {
+                                                "type": "boolean"
+                                            },
+                                            "preferredappointmenttimecode": {
+                                                "type": "integer"
+                                            },
+                                            "preferredcontactmethodcode": {
+                                                "type": "integer"
+                                            },
+                                            "processid": {},
+                                            "shippingmethodcode": {
+                                                "type": "integer"
+                                            },
+                                            "statecode": {
+                                                "type": "integer"
+                                            },
+                                            "statuscode": {
+                                                "type": "integer"
+                                            },
+                                            "telephone2": {
+                                                "type": "string"
+                                            },
+                                            "territorycode": {
+                                                "type": "integer"
+                                            },
+                                            "timezoneruleversionnumber": {
+                                                "type": "integer"
+                                            },
+                                            "transactioncurrencyid": {
+                                                "type": "string"
+                                            },
+                                            "yomifullname": {
+                                                "type": "string"
+                                            },
+                                            "address1_addresstypecode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "address2_addresstypecode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "address2_freighttermscode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "address2_shippingmethodcode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_confirmremovepassword_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_identity_emailaddress1confirmed_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_identity_locallogindisabled_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_identity_lockoutenabled_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_identity_logonenabled_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_identity_mobilephoneconfirmed_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_identity_twofactorenabled_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_profilealert_formatted": {
+                                                "type": "string"
+                                            },
+                                            "adx_profileisanonymous_formatted": {
+                                                "type": "string"
+                                            },
+                                            "birthdate_formatted": {
+                                                "type": "string"
+                                            },
+                                            "createdon_formatted": {
+                                                "type": "string"
+                                            },
+                                            "creditonhold_formatted": {
+                                                "type": "string"
+                                            },
+                                            "customersizecode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "customertypecode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "donotbulkemail_formatted": {
+                                                "type": "string"
+                                            },
+                                            "donotbulkpostalmail_formatted": {
+                                                "type": "string"
+                                            },
+                                            "donotemail_formatted": {
+                                                "type": "string"
+                                            },
+                                            "donotfax_formatted": {
+                                                "type": "string"
+                                            },
+                                            "donotphone_formatted": {
+                                                "type": "string"
+                                            },
+                                            "donotpostalmail_formatted": {
+                                                "type": "string"
+                                            },
+                                            "donotsendmm_formatted": {
+                                                "type": "string"
+                                            },
+                                            "educationcode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "followemail_formatted": {
+                                                "type": "string"
+                                            },
+                                            "gendercode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "haschildrencode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "isautocreate_formatted": {
+                                                "type": "string"
+                                            },
+                                            "isbackofficecustomer_formatted": {
+                                                "type": "string"
+                                            },
+                                            "isprivate_formatted": {
+                                                "type": "string"
+                                            },
+                                            "leadsourcecode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "marketingonly_formatted": {
+                                                "type": "string"
+                                            },
+                                            "merged_formatted": {
+                                                "type": "string"
+                                            },
+                                            "modifiedon_formatted": {
+                                                "type": "string"
+                                            },
+                                            "msdyn_disablewebtracking_formatted": {
+                                                "type": "string"
+                                            },
+                                            "msdyn_gdproptout_formatted": {
+                                                "type": "string"
+                                            },
+                                            "msdyn_isassistantinorgchart_formatted": {
+                                                "type": "string"
+                                            },
+                                            "msdyn_isminor_formatted": {
+                                                "type": "string"
+                                            },
+                                            "msdyn_isminorwithparentalconsent_formatted": {
+                                                "type": "string"
+                                            },
+                                            "msdyn_orgchangestatus_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_address1_addresstype_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_businessexit_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_businessstatus_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_clientstatus_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_eligibleforrehire_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_excludedduetobackgroundcheck_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_filelocation_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_primarylanguage_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_spenddown_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_statenewhire_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_trainingrequired_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_union_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_vendortaxtype_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_workerscompensationrequired_formatted": {
+                                                "type": "string"
+                                            },
+                                            "participatesinworkflow_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_address1state_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_address2state_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_agreetoterms_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_alienauthorizedtowork_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_bgsform_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_blockaccesstolegacyportal_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_casemanager_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_client_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_consentdisclosure_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_consultationservice_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_consultationservices_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_copyofid_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_directdepositentered_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_electronicw2authorized_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_employee_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_employmentstatus_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_exempt_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_feinholder_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_fmsagreementreceived_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_hasmultipleclients_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_interpreterneeded_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_isfeinholdersetupcomplete_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_isnoemail_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_lawfulpermanentresident_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_legalrep_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_leiechecked_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_lockedout_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_managingparty_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_minor_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_mpstatus_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_papertrainingrequired_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_payrolldocumentadded_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_pilotgroup_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_printspendingsummary_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_ptoaccrual_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_request_270_status_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_requirementscompleted_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_requirementscreated_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_safeathome_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_sickaccrual_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_ssnverified_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_supportplanner_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_sutastate_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_synchedtogp_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_text_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_uscitizen_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_vendor_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_vendorholdstatus_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_veteran_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_w4entered_formatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_w9_formatted": {
+                                                "type": "string"
+                                            },
+                                            "preferredappointmenttimecode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "preferredcontactmethodcode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "shippingmethodcode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "statecode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "statuscode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "territorycode_formatted": {
+                                                "type": "string"
+                                            },
+                                            "timezoneruleversionnumber_formatted": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "contentType": {
+                                "type": "string"
+                            },
+                            "userProperties": {
+                                "type": "object",
+                                "properties": {
+                                    "request-Id": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "messageId": {
+                                "type": "string"
+                            },
+                            "scheduledEnqueueTimeUtc": {
+                                "type": "string"
+                            },
+                            "sessionId": {
+                                "type": "string"
+                            },
+                            "correlationId": {
+                                "type": "string"
+                            },
+                            "timeToLive": {
+                                "type": "string"
+                            },
+                            "deliveryCount": {
+                                "type": "integer"
+                            },
+                            "enqueuedSequenceNumber": {
+                                "type": "integer"
+                            },
+                            "enqueuedTimeUtc": {
+                                "type": "string"
+                            },
+                            "lockedUntilUtc": {
+                                "type": "string"
+                            },
+                            "lockToken": {
+                                "type": "string"
+                            },
+                            "sequenceNumber": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {}
+            },
+            "If_no_representative_worker_connections_found": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "greater": [
+                                "@length(body('List_mpemployeeconnection')?['value'])",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Terminate": {
+                        "type": "Terminate",
+                        "inputs": {
+                            "runStatus": "Succeeded"
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {
+                        "Add_a_new_pics_mpemployeeconnection": {
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "referenceName": "commondataservice-1"
+                                    }
+                                },
+                                "method": "post",
+                                "headers": {
+                                    "prefer": "return=representation,odata.include-annotations=*",
+                                    "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                },
+                                "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_mpemployeeconnections'))}"
+                            },
+                            "runAfter": {
+                                "Get_contact": [
+                                    "SUCCEEDED"
+                                ]
+                            }
+                        },
+                        "Get_contact": {
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "referenceName": "commondataservice-1"
+                                    }
+                                },
+                                "method": "get",
+                                "headers": {
+                                    "prefer": "odata.include-annotations=*",
+                                    "accept": "application/json;odata.metadata=full",
+                                    "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                },
+                                "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('contacts'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_Message_JSON')?['contentData']?['document']?['new_managingpartyid']))})"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "List_mpemployeeconnection": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "List_mpemployeeconnection": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "commondataservice-1"
+                        }
+                    },
+                    "method": "get",
+                    "headers": {
+                        "prefer": "odata.include-annotations=*",
+                        "accept": "application/json;odata.metadata=full",
+                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                    },
+                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_mpemployeeconnections'))}",
+                    "queries": {
+                        "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n<entity name=\"pics_mpemployeeconnection\">\n<attribute name=\"pics_name\"/>\n<attribute name=\"createdon\"/>\n<attribute name=\"pics_mpemployeeconnectionid\"/>\n<order attribute=\"pics_name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"pics_managingpartyid\" operator=\"eq\" value=\"@{body('Parse_Message_JSON')?['contentData']?['document']?['new_managingpartyid']}\"/>\n<condition attribute=\"pics_employeeid\" operator=\"eq\" value=\"@{body('Parse_Message_JSON')?['contentData']?['document']?['contactid']}\"/>\n<condition attribute=\"pics_connectiontype\" operator=\"eq\" value=\"456010001\"/>\n</filter>\n</entity>\n</fetch>"
+                    }
+                },
+                "runAfter": {
+                    "If_managing_party_id_is_not_present": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "If_managing_party_id_is_not_present": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@body('Parse_Message_JSON')?['contentData']?['document']?['new_managingpartyid']",
+                                "@null"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Terminate_1": {
+                        "type": "Terminate",
+                        "inputs": {
+                            "runStatus": "Succeeded"
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Parse_Message_JSON": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Complete_the_message_in_a_session": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "messageId": "@triggerBody()?['messageId']"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "completeMessageInSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "runAfter": {
+                    "If_no_representative_worker_connections_found": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "On_single_new_message_from_queue_session": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "staging-dataverse-entity",
+                        "sessionId": "contact,mpclientconnection"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onSingleNewMessageFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Minute"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

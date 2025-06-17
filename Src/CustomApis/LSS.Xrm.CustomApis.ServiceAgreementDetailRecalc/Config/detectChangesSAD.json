@@ -1,0 +1,7 @@
+{
+  "sourceAttributesMonitored": [
+    "new_serviceagreementid",
+    "new_StartDate",
+    "new_EndDate"
+  ]
+}

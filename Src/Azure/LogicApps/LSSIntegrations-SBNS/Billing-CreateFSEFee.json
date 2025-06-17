@@ -1,0 +1,168 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "List_rows": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "commondataservice-1"
+                        }
+                    },
+                    "method": "get",
+                    "headers": {
+                        "prefer": "odata.include-annotations=*",
+                        "accept": "application/json;odata.metadata=full",
+                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                    },
+                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_serviceagreementdetails'))}",
+                    "queries": {
+                        "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\" top='5'>\n<entity name=\"new_serviceagreementdetail\">\n<attribute name=\"new_serviceagreementid\"/>\n<attribute name=\"new_priceperunit\"/>\n<attribute name=\"new_clientid\"/>\n<attribute name=\"new_startdate\"/>\n<attribute name=\"new_enddate\"/>\n<attribute name=\"new_serviceagreementdetailid\"/>\n<order attribute=\"new_name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"new_priceperunit\" operator=\"gt\" value=\"0\"/>\n<condition attribute=\"statecode\" operator=\"eq\" value=\"0\"/>\n<condition attribute=\"new_startdate\" operator=\"on-or-before\" value=\"2025-03-15\"/>\n<condition attribute=\"new_enddate\" operator=\"on-or-after\" value=\"2025-03-15\"/>\n</filter>\n<link-entity name=\"pics_subxcode\" from=\"pics_subxcodeid\" to=\"pics_subxcodeid\" link-type=\"inner\" alias=\"aa\">\n<attribute name=\"pics_subxcode\"/>\n<filter type=\"or\">\n<condition attribute=\"pics_subxcode\" operator=\"eq\" value=\"903\"/>\n<condition attribute=\"pics_subxcode\" operator=\"eq\" value=\"905\"/>\n<condition attribute=\"pics_subxcode\" operator=\"eq\" value=\"825\"/>\n<condition attribute=\"pics_subxcode\" operator=\"eq\" value=\"830\"/>\n<condition attribute=\"pics_subxcode\" operator=\"eq\" value=\"835\"/>\n</filter>\n</link-entity>\n</entity>\n</fetch>"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "For_each": {
+                "type": "foreach",
+                "foreach": "@body('List_rows')?['value']",
+                "actions": {
+                    "Add_a_new_fee": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}"
+                        },
+                        "runAfter": {
+                            "Switch": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Switch": {
+                        "type": "Switch",
+                        "expression": "@items('For_each')?['aa.pics_subxcode']",
+                        "default": {
+                            "actions": {}
+                        },
+                        "cases": {
+                            "Case_903": {
+                                "actions": {
+                                    "Set_name_FSE_Fee": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "Subxcode",
+                                            "value": "FSE Fee"
+                                        }
+                                    }
+                                },
+                                "case": "903"
+                            },
+                            "Case_905": {
+                                "actions": {
+                                    "Set_name_FEA_Fee": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "Subxcode",
+                                            "value": "FEA Fee"
+                                        }
+                                    }
+                                },
+                                "case": "905"
+                            },
+                            "Case_825": {
+                                "actions": {
+                                    "Set_name_Payroll_Admin_Fee_Monthly": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "Subxcode",
+                                            "value": "Payroll Admin Fee Monthly"
+                                        }
+                                    }
+                                },
+                                "case": "825"
+                            },
+                            "Case_830": {
+                                "actions": {
+                                    "Set_name_FMS_Admin_Fee_-_Monthly_": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "Subxcode",
+                                            "value": "FMS Admin Fee - Monthly "
+                                        }
+                                    }
+                                },
+                                "case": "830"
+                            },
+                            "Case_835": {
+                                "actions": {
+                                    "Set_FMS_Admin_Fee_Monthly": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "Subxcode",
+                                            "value": "FMS Admin Fee Monthly+"
+                                        }
+                                    }
+                                },
+                                "case": "835"
+                            }
+                        },
+                        "runAfter": {
+                            "Compose": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Compose": {
+                        "type": "Compose",
+                        "inputs": "@items('For_each')?['aa.pics_subxcode']"
+                    }
+                },
+                "runAfter": {
+                    "List_rows": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_variable": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "Subxcode",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Month",
+                    "timeZone": "Central Standard Time",
+                    "startTime": "2025-03-15T12:00:00Z"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

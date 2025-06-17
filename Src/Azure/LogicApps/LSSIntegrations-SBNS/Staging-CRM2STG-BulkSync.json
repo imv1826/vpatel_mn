@@ -1,0 +1,400 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Get_table_definition_from_database": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "SELECT COLUMN_NAME\nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_NAME = N'@{triggerBody()?['tableName']}'"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_Variables": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Is_table_found": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@empty(body('Get_table_definition_from_database'))",
+                                "@false"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Retrieve_records_from_CRM": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent(triggerBody()?['collectionName']))}",
+                            "queries": {
+                                "fetchXml": "@{outputs('Compose_fetch_xml_query')}"
+                            }
+                        },
+                        "runAfter": {
+                            "Compose_fetch_xml_query": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Select_table_columns_to_array": {
+                        "type": "Select",
+                        "inputs": {
+                            "from": "@body('Get_table_definition_from_database')[0]",
+                            "select": "@toLower(item()?['COLUMN_NAME'])"
+                        },
+                        "runAfter": {
+                            "If_Not_Bulk_Mode": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Filter_table_columns_array": {
+                        "type": "Query",
+                        "inputs": {
+                            "from": "@body('Select_table_columns_to_array')",
+                            "where": "@or(not(endsWith(item(),'name')),not(contains(body('Select_table_columns_to_array'), substring(item(), 0, sub(length(item()), 4)))))"
+                        },
+                        "runAfter": {
+                            "Select_table_columns_to_array": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "For_each_CRM_record": {
+                        "type": "foreach",
+                        "foreach": "@outputs('Create_SQL_objects')",
+                        "actions": {
+                            "Check_for_existing_record": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "stg.@{triggerBody()?['tableName']}",
+                                        "columnValuesForWhereCondition": {
+                                            "@{triggerBody()?['primaryAttribute']}": "@{item()?['primaryId']}"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-6",
+                                        "operationId": "getRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Is_existing_record_found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@empty(body('Check_for_existing_record'))",
+                                                "@false"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Update_existing_row": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "tableName": "stg.@{triggerBody()?['tableName']}",
+                                                "setColumns": "@item()?['object']",
+                                                "columnValuesForWhereCondition": {
+                                                    "@{triggerBody()?['primaryAttribute']}": "@{item()?['primaryId']}"
+                                                }
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-6",
+                                                "operationId": "updateRows",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Insert_new_row": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "tableName": "stg.@{triggerBody()?['tableName']}",
+                                                    "setColumns": "@item()?['object']"
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-6",
+                                                    "operationId": "insertRow",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Check_for_existing_record": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Create_SQL_objects": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Compose_fetch_xml_query": {
+                        "type": "Compose",
+                        "inputs": "<fetch distinct='false' count='5000' page='@{outputs('Compose_pageNumber')}'>\n  <entity name='@{triggerBody()?['tableName']}'>\n   @{replace(body('Compose_fetch_xml_attribute_list'), '\"', '')}\n    <order attribute='modifiedon' />\n    <filter type='and'>\n      <condition attribute='modifiedon' operator='ge' value='@{variables('lastRunDate')}' />\n    </filter>\n    @{item()?['filter']}\n  </entity>\n</fetch>",
+                        "runAfter": {
+                            "Compose_pageNumber": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Compose_fetch_xml_attribute_list": {
+                        "type": "Table",
+                        "inputs": {
+                            "from": "@body('Filter_table_columns_array')",
+                            "format": "CSV",
+                            "columns": [
+                                {
+                                    "value": "<attribute name='@{item()}'/>"
+                                }
+                            ]
+                        },
+                        "runAfter": {
+                            "Filter_table_columns_array": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Create_SQL_objects": {
+                        "type": "JavaScriptCode",
+                        "inputs": {
+                            "code": "const fields = workflowContext.actions.Select_table_columns_to_array.outputs.body;\r\nconst objects = workflowContext.actions.Retrieve_records_from_CRM.outputs.body.value;\r\nconst tableInfo = workflowContext.trigger.outputs.body;\r\n\r\nlet tables = [];\r\nfor(j = 0; j < objects.length; j++) {\r\n  let table = {};\r\n  const keys = Object.keys(objects[j]);\r\n  for(i = 0; i < keys.length; i++) {\r\n    if (keys[i].endsWith('@OData.Community.Display.V1.FormattedValue')) {\r\n      let propName = keys[i].substring(0, keys[i].indexOf('@'));\r\n      if (fields.includes(propName + 'name')) {\r\n        table[propName + 'name'] = objects[j][keys[i]];\r\n      }\r\n      else if (propName.endsWith('_value')) {\r\n        propName = propName.substring(1, propName.indexOf('_value')) + 'name';\r\n        if (fields.includes(propName))\r\n          table[propName] = objects[j][keys[i]];\r\n      }\r\n    }\r\n    else if (keys[i].includes('@odata.')) {\r\n      continue;\r\n    }\r\n    else if (keys[i].endsWith('_value')) {\r\n      let key = keys[i].substring(1, keys[i].indexOf('_value'));\r\n      if (fields.includes(key))\r\n        table[key] = objects[j][keys[i]];\r\n    }\r\n    else if (fields.includes(keys[i])) {\r\n      table[keys[i]] = objects[j][keys[i]];\r\n    }\r\n  }\r\n  tables.push({\r\n    \"tableName\": table[tableInfo.tableName],\r\n    \"primaryId\": table[tableInfo.primaryAttribute],\r\n    \"object\": table\r\n  });\r\n}\r\n\r\nreturn tables;"
+                        },
+                        "runAfter": {
+                            "Retrieve_records_from_CRM": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "If_Not_Bulk_Mode": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@variables('isBulkMode')",
+                                        "@false"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Retrieve_last_modified_on_date": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "query": "SELECT MAX(modifiedon) as lastModifiedOn FROM stg.@{triggerBody()?['tableName']}"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-6",
+                                        "operationId": "executeQuery",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Set_variable": {
+                                "type": "SetVariable",
+                                "inputs": {
+                                    "name": "lastRunDate",
+                                    "value": "@if(empty(body('Retrieve_last_modified_on_date')?[0]?[0]?['lastModifiedOn']), '2024-10-01T00:00:00Z', concat(body('Retrieve_last_modified_on_date')?[0]?[0]?['lastModifiedOn'], 'Z'))"
+                                },
+                                "runAfter": {
+                                    "Retrieve_last_modified_on_date": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        }
+                    },
+                    "Compose_pageNumber": {
+                        "type": "Compose",
+                        "inputs": "@if(or(equals(triggerBody()?['pageNumber'], null), equals(triggerBody()?['pageNumber'], 0)),1,triggerBody()?['pageNumber'])",
+                        "runAfter": {
+                            "Compose_fetch_xml_attribute_list": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "If_Has_More_Records": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@body('Retrieve_records_from_CRM')?['@Microsoft.Dynamics.CRM.morerecords']",
+                                        "@true"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Call_this_Workflow_with_the_Next_Page_Number": {
+                                "type": "Http",
+                                "inputs": {
+                                    "uri": "https://lssintegrations-logic.azurewebsites.net:443/api/Staging-CRM2STG-BulkSync/triggers/When_a_HTTP_request_is_received/invoke?api-version=2022-05-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=ZSQxVWwGhE8kqxaDS_5482XGvX6Z4gb3j-4SCOPDw8A",
+                                    "method": "POST",
+                                    "body": {
+                                        "tableName": "@triggerBody()?['tableName']",
+                                        "collectionName": "@triggerBody()?['collectionName']",
+                                        "primaryAttribute": "@triggerBody()?['primaryAttribute']",
+                                        "filter": "@triggerBody()?['filter']",
+                                        "pageNumber": "@add(outputs('Compose_pageNumber'), 1)"
+                                    }
+                                },
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "For_each_CRM_record": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {
+                        "Respond_404": {
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "statusCode": 404,
+                                "body": "Table not found in target system"
+                            }
+                        },
+                        "Terminate_-_Not_Found": {
+                            "type": "Terminate",
+                            "inputs": {
+                                "runStatus": "Failed",
+                                "runError": {
+                                    "message": "Table not found in target system"
+                                }
+                            },
+                            "runAfter": {
+                                "Respond_404": [
+                                    "SUCCEEDED"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Get_table_definition_from_database": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_Variables": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "lastRunDate",
+                            "type": "string",
+                            "value": "2000-01-01T00:00:00Z"
+                        },
+                        {
+                            "name": "isBulkMode",
+                            "type": "boolean",
+                            "value": false
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "Respond_200": {
+                "type": "Response",
+                "kind": "Http",
+                "inputs": {
+                    "statusCode": 200
+                },
+                "runAfter": {
+                    "Is_table_found": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "method": "POST",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "tableName": {
+                                "type": "string"
+                            },
+                            "collectionName": {
+                                "type": "string"
+                            },
+                            "primaryAttribute": {
+                                "type": "string"
+                            },
+                            "filter": {
+                                "type": "string"
+                            },
+                            "pageNumber": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "tableName",
+                            "collectionName",
+                            "primaryAttribute"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

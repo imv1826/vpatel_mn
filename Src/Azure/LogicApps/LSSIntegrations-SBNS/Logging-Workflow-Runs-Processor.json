@@ -1,0 +1,687 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Get_All_Workflows_by_Resource_Group": {
+                "type": "Http",
+                "inputs": {
+                    "uri": "https://management.azure.com/subscriptions/50ffab59-d16f-4716-892e-fa0fd197c4f5/resourceGroups/LSSIntegration-Apps-RSG/providers/Microsoft.Web/sites/LSSIntegrations-LOGIC/workflows",
+                    "method": "GET",
+                    "queries": {
+                        "api-version": "2024-04-01"
+                    },
+                    "authentication": {
+                        "type": "ManagedServiceIdentity"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_actionOutputs": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                },
+                "trackedProperties": {
+                    "@{trigger()?.startTime}": "@{utcNow()}"
+                }
+            },
+            "For_Each_Workflow": {
+                "type": "Foreach",
+                "foreach": "@body('Filter_Workflows')",
+                "actions": {
+                    "Get_Completed_Runs_Since_Last_Processing": {
+                        "type": "Http",
+                        "inputs": {
+                            "uri": "https://management.azure.com/subscriptions/50ffab59-d16f-4716-892e-fa0fd197c4f5/resourceGroups/LSSIntegration-Apps-RSG/providers/Microsoft.Web/sites/LSSIntegrations-LOGIC/hostruntime/runtime/webhooks/workflow/api/management/workflows/@{split(items('For_Each_Workflow')?['name'], '/')[1]}/runs",
+                            "method": "GET",
+                            "queries": {
+                                "api-version": "2018-11-01",
+                                "$orderby": "startTime desc",
+                                "$filter": "startTime ge @{variables('lastRunTime')} and status ne 'Running'"
+                            },
+                            "authentication": {
+                                "type": "ManagedServiceIdentity"
+                            }
+                        },
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        }
+                    },
+                    "If_Has_Valid_Runs": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "greater": [
+                                        "@length(body('Filter_Unfinished_Runs'))",
+                                        "@0"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "For_Each_Run": {
+                                "type": "Foreach",
+                                "foreach": "@body('Filter_Unfinished_Runs')",
+                                "actions": {
+                                    "Get_Run_Actions": {
+                                        "type": "Http",
+                                        "inputs": {
+                                            "uri": "https://management.azure.com/subscriptions/50ffab59-d16f-4716-892e-fa0fd197c4f5/resourceGroups/LSSIntegration-Apps-RSG/providers/Microsoft.Web/sites/LSSIntegrations-LOGIC/hostruntime/runtime/webhooks/workflow/api/management/workflows/@{split(items('For_Each_Workflow')?['name'], '/')[1]}/runs/@{items('For_Each_Run')?['name']}",
+                                            "method": "GET",
+                                            "queries": {
+                                                "api-version": "2018-11-01",
+                                                "$expand": "properties/actions,workflow/properties"
+                                            },
+                                            "authentication": {
+                                                "type": "ManagedServiceIdentity"
+                                            }
+                                        },
+                                        "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                                "transferMode": "Chunked"
+                                            }
+                                        }
+                                    },
+                                    "Build_a_Flattened_List_of_Action_Data": {
+                                        "type": "JavaScriptCode",
+                                        "inputs": {
+                                            "code": "const invalidActionStatuses = [\"skipped\", \"running\", \"waiting\"];\r\n\r\nfunction getNestedActions(entries) {\r\n    const actionsArray = [];\r\n\r\n    for (const [name, value] of entries) {\r\n        const subAction = {\r\n            name: name,\r\n            type: value.type,\r\n        };\r\n\r\n        actionsArray.push(subAction);\r\n\r\n        if (value.actions) {\r\n            actionsArray.push(...getNestedActions(Object.entries(value.actions)));\r\n        }\r\n    }\r\n\r\n    return actionsArray;\r\n}\r\n\r\nfunction buildActionEntityData(actionsData, nonIterativeAction) {\r\n    const actionData = actionsData.find(([k, _]) => k === nonIterativeAction.name);\r\n    if (!actionData) return;\r\n\r\n    const [actionName, actionValue] = actionData;\r\n    if (invalidActionStatuses.includes(actionValue.status.toLowerCase())) return;\r\n\r\n    const action = {\r\n        name: actionName,\r\n        type: nonIterativeAction.type,\r\n        id: actionValue.correlation.actionTrackingId,\r\n        startTime: actionValue.startTime,\r\n        endTime: actionValue.endTime,\r\n        status: actionValue.status,\r\n        errorMessage: actionValue.error ? actionValue.error.message : null,\r\n        inputsLink: actionValue.inputsLink ? actionValue.inputsLink.uri : null,\r\n        inputs: null,\r\n        outputsLink: actionValue.outputsLink ? actionValue.outputsLink.uri : null,\r\n        outputs: null,\r\n        source: actionValue.trackedProperties ? actionValue.trackedProperties.source : null,\r\n        sourceEntity: actionValue.trackedProperties ? actionValue.trackedProperties.sourceEntity : null,\r\n        sourceId: actionValue.trackedProperties ? actionValue.trackedProperties.sourceId : null,\r\n        target: actionValue.trackedProperties ? actionValue.trackedProperties.target : null,\r\n        targetEntity: actionValue.trackedProperties ? actionValue.trackedProperties.targetEntity : null,\r\n        targetId: actionValue.trackedProperties ? actionValue.trackedProperties.targetId : null,\r\n    };\r\n\r\n    return {\r\n        action,\r\n        isIterative: !!actionValue.repetitionCount,\r\n        needsInputs: !!actionValue.inputsLink,\r\n        needsOutputs: !!actionValue.outputsLink,\r\n    };\r\n}\r\n\r\nconst actionsResponse = workflowContext.actions.Get_Run_Actions.outputs.body;\r\n\r\nif (!actionsResponse.properties.actions) return [];\r\n\r\nconst actionsDefinition = Object.entries(actionsResponse.properties.workflow.properties.definition.actions);\r\nconst triggersDefinition = Object.entries(actionsResponse.properties.workflow.properties.definition.triggers);\r\n\r\nconst actionDefs = actionsDefinition.filter(([_, value]) => value.type !== 'Foreach').map(([name, value]) => ({\r\n    name: name,\r\n    type: value.type,\r\n}));\r\n\r\nconst triggerDef = triggersDefinition.length > 0 ? triggersDefinition[0] : null;\r\nconst triggerDefName = triggerDef ? triggerDef[0] : null;\r\nconst triggerDefValue = triggerDef ? triggerDef[1] : null;\r\n\r\nif (triggerDefName && triggerDefValue) {\r\n    actionDefs.push({\r\n        name: triggerDefName,\r\n        type: triggerDefValue.type,\r\n    });\r\n}\r\n\r\nactionDefs.push(...getNestedActions(actionsDefinition.filter(([_, value]) => value.type === 'Foreach')));\r\n\r\nconst actionsData = Object.entries(actionsResponse.properties.actions);\r\n\r\n/**\r\n * @type {{ action: Action; isIterative: boolean; needsInputs: boolean; needsOutputs: boolean; }[]}\r\n */\r\nreturn actionDefs.map(def => buildActionEntityData(actionsData, def)).filter(a => a);"
+                                        },
+                                        "runAfter": {
+                                            "Get_Run_Actions": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    },
+                                    "For_Each_Action_Data_in_List": {
+                                        "type": "Foreach",
+                                        "foreach": "@outputs('Build_a_Flattened_List_of_Action_Data')",
+                                        "actions": {
+                                            "If_Is_Iterative": {
+                                                "type": "If",
+                                                "expression": {
+                                                    "and": [
+                                                        {
+                                                            "equals": [
+                                                                "@items('For_Each_Action_Data_in_List')?['isIterative']",
+                                                                "@true"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "actions": {
+                                                    "Get_Run_Action_Repetitions": {
+                                                        "type": "Http",
+                                                        "inputs": {
+                                                            "uri": "https://management.azure.com/subscriptions/50ffab59-d16f-4716-892e-fa0fd197c4f5/resourceGroups/LSSIntegration-Apps-RSG/providers/Microsoft.Web/sites/LSSIntegrations-LOGIC/hostruntime/runtime/webhooks/workflow/api/management/workflows/@{split(items('For_Each_Workflow')?['name'], '/')[1]}/runs/@{items('For_Each_Run')?['name']}/actions/@{items('For_Each_Action_Data_in_List')?['action']?['name']}/repetitions",
+                                                            "method": "GET",
+                                                            "queries": {
+                                                                "api-version": "2018-11-01"
+                                                            },
+                                                            "authentication": {
+                                                                "type": "ManagedServiceIdentity"
+                                                            }
+                                                        },
+                                                        "runtimeConfiguration": {
+                                                            "contentTransfer": {
+                                                                "transferMode": "Chunked"
+                                                            }
+                                                        }
+                                                    },
+                                                    "For_Each_Action_Repetition": {
+                                                        "type": "Foreach",
+                                                        "foreach": "@body('Get_Run_Action_Repetitions')?['value']",
+                                                        "actions": {
+                                                            "Add_a_message_in_'integrationslog'_queue_in_'flowrunaction'_session_for_rep": {
+                                                                "type": "ServiceProvider",
+                                                                "inputs": {
+                                                                    "parameters": {
+                                                                        "entityName": "integrationslog",
+                                                                        "message": {
+                                                                            "contentData": {
+                                                                                "flowName": "@split(items('For_Each_Workflow')?['name'], '/')[1]",
+                                                                                "runId": "@items('For_Each_Run')?['name']",
+                                                                                "actionId": "@items('For_Each_Action_Data_in_List')?['action']?['id']",
+                                                                                "startTime": "@items('For_Each_Action_Data_in_List')?['action']?['startTime']",
+                                                                                "name": "@items('For_Each_Action_Data_in_List')?['action']?['name']",
+                                                                                "status": "@items('For_Each_Action_Data_in_List')?['action']?['status']",
+                                                                                "errorMessage": "@items('For_Each_Action_Data_in_List')?['action']?['errorMessage']",
+                                                                                "runStartTime": "@items('For_Each_Run')?['properties']?['startTime']",
+                                                                                "endTime": "@items('For_Each_Action_Data_in_List')?['action']?['endTime']",
+                                                                                "inputs": "@if(equals(variables('actionInputs'), null), null, string(variables('actionInputs')))",
+                                                                                "outputs": "@if(equals(variables('actionOutputs'), null), null, string(variables('actionOutputs')))",
+                                                                                "source": "@items('For_Each_Action_Data_in_List')?['action']?['source']",
+                                                                                "sourceEntity": "@items('For_Each_Action_Data_in_List')?['action']?['sourceEntity']",
+                                                                                "sourceId": "@items('For_Each_Action_Data_in_List')?['action']?['sourceId']",
+                                                                                "target": "@items('For_Each_Action_Data_in_List')?['action']?['target']",
+                                                                                "targetEntity": "@items('For_Each_Action_Data_in_List')?['action']?['targetEntity']",
+                                                                                "targetId": "@items('For_Each_Action_Data_in_List')?['action']?['targetId']"
+                                                                            },
+                                                                            "contentType": "application/json; charset=utf-8",
+                                                                            "sessionId": "flowrunaction"
+                                                                        }
+                                                                    },
+                                                                    "serviceProviderConfiguration": {
+                                                                        "connectionName": "serviceBus",
+                                                                        "operationId": "sendMessage",
+                                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                    }
+                                                                },
+                                                                "runAfter": {
+                                                                    "If_Needs_Outputs": [
+                                                                        "SUCCEEDED"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "If_Needs_Outputs": {
+                                                                "type": "If",
+                                                                "expression": {
+                                                                    "and": [
+                                                                        {
+                                                                            "equals": [
+                                                                                "@items('For_Each_Action_Data_in_List')?['needsOutputs']",
+                                                                                "@true"
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "actions": {
+                                                                    "Get_Rep_Outputs": {
+                                                                        "type": "Http",
+                                                                        "inputs": {
+                                                                            "uri": "@outputs('Build_a_Flattened_List_of_Action_Data')?['action']?['outputsLink']",
+                                                                            "method": "GET"
+                                                                        },
+                                                                        "runtimeConfiguration": {
+                                                                            "contentTransfer": {
+                                                                                "transferMode": "Chunked"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "Set_actionOutputs_to_Rep_Response_Value": {
+                                                                        "type": "SetVariable",
+                                                                        "inputs": {
+                                                                            "name": "actionOutputs",
+                                                                            "value": "@string(body('Get_Rep_Outputs'))"
+                                                                        },
+                                                                        "runAfter": {
+                                                                            "Get_Rep_Outputs": [
+                                                                                "SUCCEEDED"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "else": {
+                                                                    "actions": {
+                                                                        "Set_actionOutputs_null_-_Rep": {
+                                                                            "type": "SetVariable",
+                                                                            "inputs": {
+                                                                                "name": "actionOutputs",
+                                                                                "value": "@null"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "runAfter": {
+                                                                    "If_Needs_Inputs": [
+                                                                        "SUCCEEDED"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "If_Needs_Inputs": {
+                                                                "type": "If",
+                                                                "expression": {
+                                                                    "and": [
+                                                                        {
+                                                                            "equals": [
+                                                                                "@items('For_Each_Action_Data_in_List')?['needsInputs']",
+                                                                                "@true"
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "actions": {
+                                                                    "Get_Rep_Inputs": {
+                                                                        "type": "Http",
+                                                                        "inputs": {
+                                                                            "uri": "@outputs('Build_a_Flattened_List_of_Action_Data')?['action']?['inputsLink']",
+                                                                            "method": "GET"
+                                                                        },
+                                                                        "runtimeConfiguration": {
+                                                                            "contentTransfer": {
+                                                                                "transferMode": "Chunked"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "Set_actionInputs_to_Rep_Response_Value": {
+                                                                        "type": "SetVariable",
+                                                                        "inputs": {
+                                                                            "name": "actionInputs",
+                                                                            "value": "@string(body('Get_Rep_Inputs'))"
+                                                                        },
+                                                                        "runAfter": {
+                                                                            "Get_Rep_Inputs": [
+                                                                                "SUCCEEDED"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "else": {
+                                                                    "actions": {
+                                                                        "Set_actionInputs_null_-_Rep": {
+                                                                            "type": "SetVariable",
+                                                                            "inputs": {
+                                                                                "name": "actionInputs",
+                                                                                "value": "@null"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {
+                                                            "Get_Run_Action_Repetitions": [
+                                                                "SUCCEEDED"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "else": {
+                                                    "actions": {
+                                                        "Add_a_message_in_'integrationslog'_queue_in_'flowrunaction'_session": {
+                                                            "type": "ServiceProvider",
+                                                            "inputs": {
+                                                                "parameters": {
+                                                                    "entityName": "integrationslog",
+                                                                    "message": {
+                                                                        "contentData": {
+                                                                            "flowName": "@split(items('For_Each_Workflow')?['name'], '/')[1]",
+                                                                            "runId": "@items('For_Each_Run')?['name']",
+                                                                            "actionId": "@items('For_Each_Action_Data_in_List')?['action']?['id']",
+                                                                            "startTime": "@items('For_Each_Action_Data_in_List')?['action']?['startTime']",
+                                                                            "name": "@items('For_Each_Action_Data_in_List')?['action']?['name']",
+                                                                            "status": "@items('For_Each_Action_Data_in_List')?['action']?['status']",
+                                                                            "errorMessage": "@items('For_Each_Action_Data_in_List')?['action']?['errorMessage']",
+                                                                            "runStartTime": "@items('For_Each_Run')?['properties']?['startTime']",
+                                                                            "endTime": "@items('For_Each_Action_Data_in_List')?['action']?['endTime']",
+                                                                            "inputs": "@if(equals(variables('actionInputs'), null), null, string(variables('actionInputs')))",
+                                                                            "outputs": "@if(equals(variables('actionOutputs'), null), null, string(variables('actionOutputs')))",
+                                                                            "source": "@items('For_Each_Action_Data_in_List')?['action']?['source']",
+                                                                            "sourceEntity": "@items('For_Each_Action_Data_in_List')?['action']?['sourceEntity']",
+                                                                            "sourceId": "@items('For_Each_Action_Data_in_List')?['action']?['sourceId']",
+                                                                            "target": "@items('For_Each_Action_Data_in_List')?['action']?['target']",
+                                                                            "targetEntity": "@items('For_Each_Action_Data_in_List')?['action']?['targetEntity']",
+                                                                            "targetId": "@items('For_Each_Action_Data_in_List')?['action']?['targetId']"
+                                                                        },
+                                                                        "contentType": "application/json; charset=utf-8",
+                                                                        "sessionId": "flowrunaction"
+                                                                    }
+                                                                },
+                                                                "serviceProviderConfiguration": {
+                                                                    "connectionName": "serviceBus",
+                                                                    "operationId": "sendMessage",
+                                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "If_Action_Needs_Outputs": [
+                                                                    "SUCCEEDED"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "If_Action_Needs_Outputs": {
+                                                            "type": "If",
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "equals": [
+                                                                            "@items('For_Each_Action_Data_in_List')?['needsOutputs']",
+                                                                            "@true"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "actions": {
+                                                                "Get_Action_Outputs": {
+                                                                    "type": "Http",
+                                                                    "inputs": {
+                                                                        "uri": "@items('For_Each_Action_Data_in_List')?['action']?['outputsLink']",
+                                                                        "method": "GET"
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "contentTransfer": {
+                                                                            "transferMode": "Chunked"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Set_actionOutputs_to_Response_Value": {
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "actionOutputs",
+                                                                        "value": "@string(body('Get_Action_Outputs'))"
+                                                                    },
+                                                                    "runAfter": {
+                                                                        "Get_Action_Outputs": [
+                                                                            "SUCCEEDED"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "else": {
+                                                                "actions": {
+                                                                    "Set_actionOutputs_null": {
+                                                                        "type": "SetVariable",
+                                                                        "inputs": {
+                                                                            "name": "actionOutputs",
+                                                                            "value": "@null"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "If_Action_Needs_Inputs": [
+                                                                    "SUCCEEDED"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "If_Action_Needs_Inputs": {
+                                                            "type": "If",
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "equals": [
+                                                                            "@items('For_Each_Action_Data_in_List')?['needsInputs']",
+                                                                            "@true"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "actions": {
+                                                                "Get_Action_Inputs": {
+                                                                    "type": "Http",
+                                                                    "inputs": {
+                                                                        "uri": "@items('For_Each_Action_Data_in_List')?['action']?['inputsLink']",
+                                                                        "method": "GET"
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "contentTransfer": {
+                                                                            "transferMode": "Chunked"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Set_actionInputs_to_Response_Value": {
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "actionInputs",
+                                                                        "value": "@string(body('Get_Action_Inputs'))"
+                                                                    },
+                                                                    "runAfter": {
+                                                                        "Get_Action_Inputs": [
+                                                                            "SUCCEEDED"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "else": {
+                                                                "actions": {
+                                                                    "Set_actionInputs_null": {
+                                                                        "type": "SetVariable",
+                                                                        "inputs": {
+                                                                            "name": "actionInputs",
+                                                                            "value": "@null"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Build_a_Flattened_List_of_Action_Data": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Filter_Unfinished_Runs": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Filter_Unfinished_Runs": {
+                        "type": "Query",
+                        "inputs": {
+                            "from": "@body('Get_Completed_Runs_Since_Last_Processing')?['value']",
+                            "where": "@not(equals(item()?['status'],true))"
+                        },
+                        "runAfter": {
+                            "Get_Completed_Runs_Since_Last_Processing": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Filter_Workflows": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_actionInputs": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "actionInputs",
+                            "type": "string",
+                            "value": "@null"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Has_Previous_Runs": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_actionOutputs": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "actionOutputs",
+                            "type": "string",
+                            "value": "@null"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_actionInputs": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Get_10_Most_Recent_Processing_Runs": {
+                "type": "Http",
+                "inputs": {
+                    "uri": "https://management.azure.com/subscriptions/50ffab59-d16f-4716-892e-fa0fd197c4f5/resourceGroups/LSSIntegration-Apps-RSG/providers/Microsoft.Web/sites/LSSIntegrations-LOGIC/hostruntime/runtime/webhooks/workflow/api/management/workflows/Logging-Workflow-Runs-Processor/runs",
+                    "method": "GET",
+                    "queries": {
+                        "api-version": "2018-11-01",
+                        "$orderby": "startTime desc",
+                        "$top": "10"
+                    },
+                    "authentication": {
+                        "type": "ManagedServiceIdentity"
+                    }
+                },
+                "runAfter": {},
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "Initialize_lastRunTime_-_10_Minutes_Ago": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "lastRunTime",
+                            "type": "string",
+                            "value": "@addMinutes(trigger().startTime, -10)"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Get_10_Most_Recent_Processing_Runs": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Has_Previous_Runs": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "greater": [
+                                "@length(body('Get_10_Most_Recent_Processing_Runs')?['value'])",
+                                "@1"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "If_Another_is_Still_Running": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "greaterOrEquals": [
+                                        "@length(body('Filter_Running'))",
+                                        "@2"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Cancel_this_Run_-_Try_Again_Next_Trigger": {
+                                "type": "Terminate",
+                                "inputs": {
+                                    "runStatus": "Cancelled"
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Filter_Only_Succeeded": {
+                                    "type": "Query",
+                                    "inputs": {
+                                        "from": "@body('Get_10_Most_Recent_Processing_Runs')?['value']",
+                                        "where": "@equals(item()?['properties']?['status'],'Succeeded')"
+                                    }
+                                },
+                                "If_Any_Succeeded": {
+                                    "type": "If",
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(body('Filter_Only_Succeeded'))",
+                                                    "@0"
+                                                ]
+                                            },
+                                            {
+                                                "equals": [
+                                                    "@empty(first(body('Filter_Only_Succeeded'))?['properties']?['startTime'])",
+                                                    "@false"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "actions": {
+                                        "Set_lastRunTime_To_Last_Successful_Start_Time": {
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "lastRunTime",
+                                                "value": "@first(body('Filter_Only_Succeeded'))?['properties']?['startTime']"
+                                            }
+                                        }
+                                    },
+                                    "else": {
+                                        "actions": {}
+                                    },
+                                    "runAfter": {
+                                        "Filter_Only_Succeeded": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Filter_Running": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Filter_Running": {
+                        "type": "Query",
+                        "inputs": {
+                            "from": "@body('Get_10_Most_Recent_Processing_Runs')?['value']",
+                            "where": "@equals(item()?['properties']?['status'],'Running')"
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Initialize_lastRunTime_-_10_Minutes_Ago": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Filter_Workflows": {
+                "type": "Query",
+                "inputs": {
+                    "from": "@body('Get_All_Workflows_by_Resource_Group')?['value']",
+                    "where": "@not(equals(item()?['name'],'LSSIntegrations-LOGIC/Logging-Workflow-Runs-Processor'))"
+                },
+                "runAfter": {
+                    "Get_All_Workflows_by_Resource_Group": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Every_10_minutes": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 10,
+                    "frequency": "Minute",
+                    "timeZone": "Mountain Standard Time",
+                    "startTime": "2025-03-31T09:30:00"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

@@ -1,0 +1,8 @@
+{
+  "sourceAttributesMonitored": [
+    "new_ExtendedMileageCost",
+    "pics_Fee",
+    "statecode",
+    "new_budgetlineid"
+  ]
+}

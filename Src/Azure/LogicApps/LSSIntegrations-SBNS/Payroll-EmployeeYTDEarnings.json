@@ -1,0 +1,132 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Execute_query": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "SELECT TOP 100 EMPLOYID,        YEAR1,        (GROSWAGS_1 + GROSWAGS_2+ GROSWAGS_3 + GROSWAGS_4 + GROSWAGS_5 + GROSWAGS_6 + GROSWAGS_7+ GROSWAGS_8 + GROSWAGS_9 + GROSWAGS_10 + GROSWAGS_11 + GROSWAGS_12) AS YTD_GROSWAGS FROM UPR00900 WHERE YEAR1 = 2024"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-8",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {}
+            },
+            "For_each": {
+                "type": "foreach",
+                "foreach": "@first(body('Execute_query'))",
+                "actions": {
+                    "List_FEIN_Worker_Participant_connections": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmnop2oldev.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_feinemployeeclientconnections'))}",
+                            "queries": {
+                                "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n<entity name=\"pics_feinemployeeclientconnection\">\n<attribute name=\"pics_name\"/>\n<attribute name=\"createdon\"/>\n<attribute name=\"pics_feinemployeeclientconnectionid\"/>\n<order attribute=\"pics_name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"pics_feinnumber\" operator=\"eq\" value=\"@{trim(body('Parse_JSON')?['EMPLOYID'])}\"/>\n</filter>\n</entity>\n</fetch>"
+                            }
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Parse_JSON": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@item()",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "EMPLOYID": {
+                                        "type": "string"
+                                    },
+                                    "YEAR1": {
+                                        "type": "integer"
+                                    },
+                                    "YTD_GROSWAGS": {
+                                        "type": "number"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "For_each_1": {
+                        "type": "foreach",
+                        "foreach": "@body('List_FEIN_Worker_Participant_connections')?['value']",
+                        "actions": {
+                            "Update_a_row": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "pics_ytdearnings": "@body('Parse_JSON')?['YTD_GROSWAGS']"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmnop2oldev.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_feinemployeeclientconnections'))}(@{encodeURIComponent(encodeURIComponent(items('For_each_1')?['pics_feinemployeeclientconnectionid']))})"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "List_FEIN_Worker_Participant_connections": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Execute_query": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Every_Friday_at_11_PM_CST": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Week",
+                    "timeZone": "Central Standard Time",
+                    "schedule": {
+                        "weekDays": [
+                            "Friday"
+                        ],
+                        "hours": [
+                            23
+                        ],
+                        "minutes": [
+                            0
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

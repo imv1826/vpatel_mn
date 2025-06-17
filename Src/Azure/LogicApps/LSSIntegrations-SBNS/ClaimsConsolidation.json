@@ -1,0 +1,671 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Execute_[pLSS_ConsolidateClaimsStep1]": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "storedProcedureName": "[dbo].[pLSS_ConsolidateClaimsStep1]",
+                        "storedProcedureParameters": {
+                            "ConsolidateClaimID": "@body('Parse_Queue_Message_JSON')?['contentData']?['document']?['po_consolidateclaimsid']",
+                            "ReportType": "@body('Parse_Queue_Message_JSON')?['contentData']?['document']?['pics_reporttype']"
+                        },
+                        "includeEmptyResultSets": true
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeStoredProcedure",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Parse_Queue_Message_JSON": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Step_2_Batch_2_(Update_status_to_running)": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "tableName": "ClaimsConsolidationProcessing",
+                        "setColumns": {
+                            "Status": "Running"
+                        },
+                        "columnValuesForWhereCondition": {
+                            "Batch": "2",
+                            "Status": "New"
+                        }
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "updateRows",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Execute_[pLSS_ConsolidateClaimsStep1]": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Step_2_Batch_3_(Update_status_to_running)": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "tableName": "ClaimsConsolidationProcessing",
+                        "setColumns": {
+                            "Status": "Running"
+                        },
+                        "columnValuesForWhereCondition": {
+                            "Batch": "3",
+                            "Status": "New"
+                        }
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "updateRows",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Execute_[pLSS_ConsolidateClaimsStep1]": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Step_2_Batch_1_(Update_status_to_running)": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "tableName": "ClaimsConsolidationProcessing",
+                        "setColumns": {
+                            "Status": "Running"
+                        },
+                        "columnValuesForWhereCondition": {
+                            "Batch": "1",
+                            "Status": "New"
+                        }
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "updateRows",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Execute_[pLSS_ConsolidateClaimsStep1]": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Step_5": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "tableName": "ClaimsConsolidationProcessing",
+                        "setColumns": {
+                            "Status": "Complete",
+                            "CompleteTime": "@{utcNow()}"
+                        },
+                        "columnValuesForWhereCondition": {
+                            "Status": "BatchComplete"
+                        }
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "updateRows",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Step_2_Batch_3_(Update_status_to_running)": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Parse_Queue_Message_JSON": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@triggerBody()",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "contentData": {
+                                "type": "object",
+                                "properties": {
+                                    "initiatedOn": {
+                                        "type": "integer"
+                                    },
+                                    "messageName": {
+                                        "type": "string"
+                                    },
+                                    "logLevel": {
+                                        "type": "string"
+                                    },
+                                    "tableName": {
+                                        "type": "string"
+                                    },
+                                    "document": {
+                                        "type": "object",
+                                        "properties": {
+                                            "createdby": {
+                                                "type": "string"
+                                            },
+                                            "createdon": {
+                                                "type": "string"
+                                            },
+                                            "exchangerate": {
+                                                "type": "integer"
+                                            },
+                                            "modifiedby": {
+                                                "type": "string"
+                                            },
+                                            "modifiedon": {
+                                                "type": "string"
+                                            },
+                                            "modifiedonbehalfby": {},
+                                            "ownerid": {
+                                                "type": "string"
+                                            },
+                                            "owningbusinessunit": {
+                                                "type": "string"
+                                            },
+                                            "pics_bridgeviewbatch": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_clientid": {
+                                                "type": "string"
+                                            },
+                                            "pics_enddate": {
+                                                "type": "string"
+                                            },
+                                            "pics_readytoprocess": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_readytosubmit": {
+                                                "type": "boolean"
+                                            },
+                                            "pics_reporttype": {
+                                                "type": "integer"
+                                            },
+                                            "pics_startdate": {
+                                                "type": "string"
+                                            },
+                                            "pics_successfullysent": {
+                                                "type": "boolean"
+                                            },
+                                            "po_consolidateclaimsid": {
+                                                "type": "string"
+                                            },
+                                            "po_name": {
+                                                "type": "string"
+                                            },
+                                            "statecode": {
+                                                "type": "integer"
+                                            },
+                                            "statuscode": {
+                                                "type": "integer"
+                                            },
+                                            "timezoneruleversionnumber": {
+                                                "type": "integer"
+                                            },
+                                            "transactioncurrencyid": {
+                                                "type": "string"
+                                            },
+                                            "createdonformatted": {
+                                                "type": "string"
+                                            },
+                                            "modifiedonformatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_bridgeviewbatchformatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_enddateformatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_readytoprocessformatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_readytosubmitformatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_reporttypename": {
+                                                "type": "string"
+                                            },
+                                            "pics_startdateformatted": {
+                                                "type": "string"
+                                            },
+                                            "pics_successfullysentformatted": {
+                                                "type": "string"
+                                            },
+                                            "statecodename": {
+                                                "type": "string"
+                                            },
+                                            "statuscodename": {
+                                                "type": "string"
+                                            },
+                                            "timezoneruleversionnumberformatted": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "contentType": {
+                                "type": "string"
+                            },
+                            "userProperties": {
+                                "type": "object",
+                                "properties": {}
+                            },
+                            "messageId": {
+                                "type": "string"
+                            },
+                            "scheduledEnqueueTimeUtc": {
+                                "type": "string"
+                            },
+                            "sessionId": {
+                                "type": "string"
+                            },
+                            "timeToLive": {
+                                "type": "string"
+                            },
+                            "deliveryCount": {
+                                "type": "integer"
+                            },
+                            "enqueuedSequenceNumber": {
+                                "type": "integer"
+                            },
+                            "enqueuedTimeUtc": {
+                                "type": "string"
+                            },
+                            "lockedUntilUtc": {
+                                "type": "string"
+                            },
+                            "lockToken": {
+                                "type": "string"
+                            },
+                            "sequenceNumber": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Reset_Processing_Statuses": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Complete_the_session_message": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "messageId": "@body('Parse_Queue_Message_JSON')?['messageId']"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "completeMessageInSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "runAfter": {
+                    "Set_Consolidate_Claim_Lookups": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Set_Consolidate_Claim_Lookups": {
+                "type": "Scope",
+                "actions": {
+                    "For_Each_Expense_2": {
+                        "type": "Foreach",
+                        "foreach": "@body('Get_Processing_Expenses')?['value']",
+                        "actions": {
+                            "Set_Expense_ConsolidateClaim_Lookup": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "pics_consolidateclaimid@odata.bind": "/po_consolidateclaimses(@{body('Parse_Queue_Message_JSON')?['contentData']?['document']?['po_consolidateclaimsId']})"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_expenseid']))})"
+                                }
+                            }
+                        }
+                    },
+                    "For_Each_Mileage_Entry_2": {
+                        "type": "foreach",
+                        "foreach": "@body('Get_Processing_Mileage_Entries')?['value']",
+                        "actions": {
+                            "Set_MileageEntry__ConsolidateClaim_Lookup": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "pics_consolidateclaimid@odata.bind": "/po_consolidateclaimses(@{body('Parse_Queue_Message_JSON')?['contentData']?['document']?['po_consolidateclaimsId']})"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_mileageentryid']))})"
+                                }
+                            }
+                        }
+                    },
+                    "For_Each_Time_Entry_Detail_2": {
+                        "type": "foreach",
+                        "foreach": "@body('Get_Processing_Time_Entry_Details')?['value']",
+                        "actions": {
+                            "Set_Time_Entry_Detail_ConsolidateClaim_Lookup": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "pics_consolidateclaimid@odata.bind": "/po_consolidateclaimses(@{body('Parse_Queue_Message_JSON')?['contentData']?['document']?['po_consolidateclaimsId']})"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_timeentrydetailid']))})"
+                                }
+                            }
+                        }
+                    },
+                    "For_Each_Processing_Fee_2": {
+                        "type": "foreach",
+                        "foreach": "@body('Get_Processing_Fees')?['value']",
+                        "actions": {
+                            "Set_Processing_Fee_ConsolidateClaim_Lookup": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "pics_ConsolidateClaimid@odata.bind": "/po_consolidateclaimses(@{body('Parse_Queue_Message_JSON')?['contentData']?['document']?['po_consolidateclaimsId']})"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}(@{encodeURIComponent(encodeURIComponent(item()?['pics_feeid']))})"
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Step_5": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Reset_Processing_Statuses": {
+                "type": "Scope",
+                "actions": {
+                    "Get_Processing_Expenses": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}",
+                            "queries": {
+                                "$filter": "oops_readytoprocess eq true"
+                            }
+                        }
+                    },
+                    "Get_Processing_Mileage_Entries": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}",
+                            "queries": {
+                                "$filter": "new_readytoprocess eq true"
+                            }
+                        }
+                    },
+                    "Get_Processing_Time_Entry_Details": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}",
+                            "queries": {
+                                "$filter": "new_readytoprocess eq true"
+                            }
+                        }
+                    },
+                    "Get_Processing_Fees": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}",
+                            "queries": {
+                                "$filter": "pics_readytoprocess eq true"
+                            }
+                        }
+                    },
+                    "For_Each_Expense": {
+                        "type": "Foreach",
+                        "foreach": "@body('Get_Processing_Expenses')?['value']",
+                        "actions": {
+                            "Set_ReadyToProcess_to_null": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "oops_readytoprocess": "@null"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_expenseid']))})"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Get_Processing_Expenses": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "For_Each_Mileage_Entry": {
+                        "type": "foreach",
+                        "foreach": "@body('Get_Processing_Mileage_Entries')?['value']",
+                        "actions": {
+                            "Set_MileageEntry_ReadyToProcess_to_null": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "new_readytoprocess": "@null"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_mileageentryid']))})"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Get_Processing_Mileage_Entries": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "For_Each_Time_Entry_Detail": {
+                        "type": "foreach",
+                        "foreach": "@body('Get_Processing_Time_Entry_Details')?['value']",
+                        "actions": {
+                            "Set_Time_Entry_Detail_ReadyToProcess_to_null": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "oops_readytoprocess": "@null"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_timeentrydetailid']))})"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Get_Processing_Time_Entry_Details": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "For_Each_Processing_Fee": {
+                        "type": "foreach",
+                        "foreach": "@body('Get_Processing_Fees')?['value']",
+                        "actions": {
+                            "Set_Processing_Fee_ReadyToProcess_to_null": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "oops_readytoprocess": "@null"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}(@{encodeURIComponent(encodeURIComponent(item()?['pics_feeid']))})"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Get_Processing_Fees": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "On_single_new_po_consolidateclaims": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "staging-dataverse-entity",
+                        "sessionId": "po_consolidateclaims"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onSingleNewMessageFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Minute"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

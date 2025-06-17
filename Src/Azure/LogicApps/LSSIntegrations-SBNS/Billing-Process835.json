@@ -1,0 +1,537 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Execute_query": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "USE PICS_CE_Staging;\nSELECT DISTINCT TOP 10\n        h.ISA08\n       ,h.BPR02\n       ,h.BPR16\n       ,h.TRN02\n       ,l.ID\n       ,l.CLP01\n       ,l.CLP07\n       ,CONVERT(MONEY, svc02) AS svc02\n       ,CONVERT(MONEY, svc03) AS svc03\n       ,CAS01\n       ,CAS02\n       ,CONVERT(MONEY, cas03) cas03\n       ,CAS05\n       ,CONVERT(MONEY, cas06) cas06\n       ,lq.Desciption\nFROM    ClpSvcCas l\n        INNER JOIN Isabprtrn h ON h.ID = l.ID\n        LEFT OUTER JOIN ( SELECT  CLP01 ,STUFF(\n                                (SELECT   CHAR(10) + CHAR(13)\n                                                    + r.pics_Description\n                                           FROM     ClpLq\n                                                    INNER JOIN PICS_CE_Staging.stg.pics_claimdenialremark r ON r.pics_name = ClpLq.LQ02\n                                           WHERE    ( clp01 = Results.clp01 )\n                                    FOR   XML PATH(''),TYPE).value('(./text())[1]', 'VARCHAR(MAX)'), 1,\n                                          2, '') AS Desciption\n                          FROM      ClpLq Results\n                          GROUP BY  clp01\n                        ) lq ON lq.CLP01 = l.CLP01\nORDER BY CLP01 ,cas03 ASC;"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_totalPaid": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "For_each": {
+                "type": "foreach",
+                "foreach": "@first(body('Execute_query'))",
+                "actions": {
+                    "Parse_JSON": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ISA08": {
+                                        "type": "string"
+                                    },
+                                    "BPR02": {
+                                        "type": "string"
+                                    },
+                                    "BPR16": {
+                                        "type": "string"
+                                    },
+                                    "TRN02": {
+                                        "type": "string"
+                                    },
+                                    "ID": {
+                                        "type": "string"
+                                    },
+                                    "CLP01": {
+                                        "type": "string"
+                                    },
+                                    "CLP07": {
+                                        "type": "string"
+                                    },
+                                    "svc02": {
+                                        "type": "number"
+                                    },
+                                    "svc03": {
+                                        "type": "number"
+                                    },
+                                    "CAS01": {
+                                        "type": "string"
+                                    },
+                                    "CAS02": {
+                                        "type": "string"
+                                    },
+                                    "cas03": {
+                                        "type": "number"
+                                    },
+                                    "CAS05": {},
+                                    "cas06": {},
+                                    "Desciption": {}
+                                }
+                            }
+                        }
+                    },
+                    "pics_check_seek": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_checks'))}",
+                            "queries": {
+                                "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n<entity name=\"pics_check\">\n<attribute name=\"pics_name\"/>\n<attribute name=\"createdon\"/>\n<attribute name=\"pics_providerid\"/>\n<attribute name=\"pics_payeeid\"/>\n<attribute name=\"pics_checkdate\"/>\n<attribute name=\"pics_checkamount\"/>\n<attribute name=\"pics_checkbalance_new\"/>\n<attribute name=\"pics_checkid\"/>\n<order attribute=\"pics_name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"pics_checkamount\" operator=\"eq\" value=\"@{body('Parse_JSON')?['BPR02']}\"/>\n<condition attribute=\"pics_name\" operator=\"eq\" value=\"@{body('Parse_JSON')?['TRN02']}\"/>\n</filter>\n</entity>\n</fetch>"
+                            }
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Condition": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "greater": [
+                                        "@length(body('pics_check_seek')?['value'])",
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Delete_rows": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[dbo].[IsaBprTrn]",
+                                        "columnValuesForWhereCondition": {
+                                            "ID": "@{body('Parse_JSON')?['ID']}"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-6",
+                                        "operationId": "deleteRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "pics_check_insert": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "pics_checkamount": "@float(body('Parse_JSON')?['BPR02'])",
+                                            "pics_checkdate": "@body('Parse_JSON')?['BPR16']",
+                                            "pics_name": "@body('Parse_JSON')?['TRN02']",
+                                            "pics_checkbalance": "@float(body('Parse_JSON')?['BPR02'])",
+                                            "pics_providerid@odata.bind": "/accounts(@{body('Get_a_SA_by_ID')?['_new_billtoaccountid_value']})"
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_checks'))}"
+                                    },
+                                    "runAfter": {
+                                        "Get_a_SA_by_ID": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Claim_Seek_for_withdraw": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "headers": {
+                                            "prefer": "odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}",
+                                        "queries": {
+                                            "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n<entity name=\"salesorder\">\n<attribute name=\"name\"/>\n<attribute name=\"customerid\"/>\n<attribute name=\"statuscode\"/>\n<attribute name=\"totalamount\"/>\n<attribute name=\"ordernumber\"/>\n<attribute name=\"new_clientid\"/>\n<attribute name=\"pics_claimnumber\"/>\n<attribute name=\"salesorderid\"/>\n<order attribute=\"name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"ordernumber\" operator=\"eq\" value=\"@{body('Parse_JSON')?['CLP01']}\"/>\n<condition attribute=\"statuscode\" operator=\"ne\" value=\"456010014\"/>\n</filter>\n</entity>\n</fetch>"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Set_variable_totalPaid": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Claim_activity_first_insert": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "pics_checkid@odata.bind": "@body('pics_check_insert')?['pics_checkid']"
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_claimactivities'))}"
+                                    },
+                                    "runAfter": {
+                                        "Update_claims_withdraw": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Claim_activity_spendown_insert_": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "pics_checkid@odata.bind": "@body('pics_check_insert')?['pics_checkid']"
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_claimactivities'))}"
+                                    },
+                                    "runAfter": {
+                                        "Claim_activity_first_insert": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Invoice_insert_": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "transactioncurrencyid@odata.bind": "D40CE67E-13D0-E111-957E-005056BC4501",
+                                            "pics_invoicetype": 100000003,
+                                            "pics_serviceagreementid@odata.bind": "@variables('SA-ID')"
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('invoices'))}"
+                                    },
+                                    "runAfter": {
+                                        "Claim_activity_spendown_insert_": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Insert_invoice_detail": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "invoicedetailname": "Spend down",
+                                            "quantity": 1,
+                                            "priceperunit": "@body('Parse_JSON')?['cas03']",
+                                            "ispriceoverridden": true,
+                                            "isproductoverridden": true
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('invoicedetails'))}"
+                                    },
+                                    "runAfter": {
+                                        "Invoice_insert_": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Claim_activity_second_insert": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "transactioncurrencyid@odata.bind": "'D40CE67E-13D0-E111-957E-005056BC4501'"
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_claimactivities'))}"
+                                    },
+                                    "runAfter": {
+                                        "Insert_invoice_detail": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Condition_1": {
+                                    "type": "If",
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@float(body('Parse_JSON')?['cas03'])",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "actions": {
+                                        "Update_check": {
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "referenceName": "commondataservice-1"
+                                                    }
+                                                },
+                                                "method": "patch",
+                                                "headers": {
+                                                    "prefer": "return=representation,odata.include-annotations=*",
+                                                    "accept": "application/json;odata.metadata=full",
+                                                    "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                },
+                                                "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_checks'))}(@{encodeURIComponent(encodeURIComponent(body('pics_check_insert')?['pics_checkid']))})"
+                                            }
+                                        }
+                                    },
+                                    "else": {
+                                        "actions": {}
+                                    },
+                                    "runAfter": {
+                                        "Claim_activity_second_insert": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Set_variable_totalPaid": {
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "totalPaid",
+                                        "value": "@first(body('Claim_Seek_for_takeback')?['value'])?['new_paymentamount']"
+                                    },
+                                    "runAfter": {
+                                        "pics_check_insert": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Update_claims_withdraw": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "patch",
+                                        "body": {
+                                            "statuscode": 456010016,
+                                            "statecode": 0
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(encodeURIComponent(first(body('Claim_Seek_for_withdraw')?['value'])?['salesorderid']))})"
+                                    },
+                                    "runAfter": {
+                                        "Claim_Seek_for_withdraw": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Claim_Seek_for_takeback": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "headers": {
+                                            "prefer": "odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}",
+                                        "queries": {
+                                            "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n<entity name=\"salesorder\">\n<attribute name=\"name\"/>\n<attribute name=\"customerid\"/>\n<attribute name=\"statuscode\"/>\n<attribute name=\"totalamount\"/>\n<attribute name=\"ordernumber\"/>\n<attribute name=\"new_clientid\"/>\n<attribute name=\"pics_claimnumber\"/>\n<attribute name=\"salesorderid\"/>\n<order attribute=\"name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"ordernumber\" operator=\"eq\" value=\"@{body('Parse_JSON')?['CLP01']}\"/>\n<condition attribute=\"statuscode\" operator=\"eq\" value=\"456010014\"/>\n</filter>\n</entity>\n</fetch>"
+                                        }
+                                    }
+                                },
+                                "Update_claims_takeback": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "patch",
+                                        "body": {
+                                            "statuscode": 456010015,
+                                            "statecode": 2
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(encodeURIComponent(first(body('Claim_Seek_for_takeback')?['value'])?['salesorderid']))})"
+                                    },
+                                    "runAfter": {
+                                        "Claim_Seek_for_takeback": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Set_SA-ID": {
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "SA-ID",
+                                        "value": "@first(body('Claim_Seek_for_takeback')?['value'])?['_new_parentserviceagreement_value']"
+                                    },
+                                    "runAfter": {
+                                        "Update_claims_takeback": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Get_a_SA_by_ID": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "headers": {
+                                            "prefer": "odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_serviceagreements'))}(@{encodeURIComponent(encodeURIComponent(variables('SA-ID')))})",
+                                        "queries": {
+                                            "$select": "new_billtoaccountid"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Set_SA-ID": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "pics_check_seek": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Execute_query": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_SA-ID": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "SA-ID",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "Initialize_totalPaid": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "totalPaid",
+                            "type": "float"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_SA-ID": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "Central Standard Time",
+                    "schedule": {
+                        "hours": [
+                            12
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

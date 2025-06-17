@@ -1,0 +1,443 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_Each_Table_in_Trigger_Body": {
+                "type": "Foreach",
+                "foreach": "@triggerBody()?['sourceTableNames']",
+                "actions": {
+                    "Get_the_Latest_modifiedon_Value_in_the_Table": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "query": "SELECT MAX(modifiedon) AS MaxModifiedOn FROM stg.@{outputs('Build_Table_Mapping_Data')?['tableName']}"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "sql-6",
+                                "operationId": "executeQuery",
+                                "serviceProviderId": "/serviceProviders/sql"
+                            }
+                        },
+                        "runAfter": {
+                            "Build_Table_Mapping_Data": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Get_Delete_Events": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent('pics_eventlogs')}",
+                            "queries": {
+                                "$select": "pics_targetentitylogicalname,pics_eventlogid,pics_messagename,pics_targetentityid",
+                                "$filter": "pics_targetentitylogicalname eq 'pics_payperiod' and createdon gt @{variables('lastRunTime')}",
+                                "$orderby": "modifiedon"
+                            }
+                        },
+                        "runAfter": {
+                            "Until_Response_'nextLink'_is_empty": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "If_Table_Has_Delete_Events": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "greater": [
+                                        "@length(body('Get_Delete_Events')?['value'])",
+                                        "@0"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Build_Mapped_Ids_Value_-_Delete": {
+                                "type": "JavaScriptCode",
+                                "inputs": {
+                                    "code": "const deleteEvents = workflowContext.actions.Get_Delete_Events.outputs.body.value;\r\n\r\nconst idProp = workflowContext.actions.Build_Table_Mapping_Data.outputs.primaryIdColumn;\r\n\r\nreturn deleteEvents.reduce((acc, entity, i, arr) => {\r\n  acc += `'${entity[idProp]}'`;\r\n  if (i !== arr.length - 1) acc += \", \";\r\n  return acc;\r\n}, \"\");"
+                                }
+                            },
+                            "Delete_rows": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[stg].[pics_payperiod]",
+                                        "columnValuesForWhereCondition": {
+                                            "@{outputs('Build_Mapped_Ids_Value_-_Delete')?['primaryIdColumn']}": "IN (@{outputs('Build_Mapped_Ids_Value_-_Delete')})"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-6",
+                                        "operationId": "deleteRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                },
+                                "runAfter": {
+                                    "Build_Mapped_Ids_Value_-_Delete": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Get_Delete_Events": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "If_MaxModifiedOn_Has_Value_and_Is_Not_Debug_Mode": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "not": {
+                                        "equals": [
+                                            "@first(first(body('Get_the_Latest_modifiedon_Value_in_the_Table')))?['MaxModifiedOn']",
+                                            "@null"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "equals": [
+                                        "@variables('isDebugMode')",
+                                        "@false"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Set_lastRunTime_to_MaxModifiedOn": {
+                                "type": "SetVariable",
+                                "inputs": {
+                                    "name": "lastRunTime",
+                                    "value": "@concat(first(first(body('Get_the_Latest_modifiedon_Value_in_the_Table')))?['MaxModifiedOn'], 'Z')"
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Set_lastRunTime_to_5_Years_Ago": {
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "lastRunTime",
+                                        "value": "@addDays(trigger().startTime, -1825)"
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Get_the_Latest_modifiedon_Value_in_the_Table": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Build_Table_Mapping_Data": {
+                        "type": "JavaScriptCode",
+                        "inputs": {
+                            "code": "const entityMaps = {\r\n    account: {\r\n        address1_city: \"address1_city\",\r\n        address1_line1: \"address1_line1\",\r\n        address1_line2: \"address1_line2\",\r\n        address1_name: \"address1_name\",\r\n        address1_postalcode: \"address1_postalcode\",\r\n        address1_primarycontactname: \"address1_primarycontactname\",\r\n        address1_stateorprovince: \"address1_stateorprovince\",\r\n        address1_telephone1: \"address1_telephone1\",\r\n        address2_city: \"address2_city\",\r\n        address2_line1: \"address2_line1\",\r\n        address2_line2: \"address2_line2\",\r\n        address2_name: \"address2_name\",\r\n        address2_postalcode: \"address2_postalcode\",\r\n        address2_primarycontactname: \"address2_primarycontactname\",\r\n        address2_stateorprovince: \"address2_stateorprovince\",\r\n        address2_telephone1: \"address2_telephone1\",\r\n        modifiedon: \"modifiedon\",\r\n        name: \"name\",\r\n        new_billingproviderproviderid: \"new_billingproviderproviderid\",\r\n        new_billingprovidertaxid: \"new_billingprovidertaxid\",\r\n        new_consolidationtype: \"new_consolidationtype\",\r\n        \"new_consolidationtype@OData.Community.Display.V1.FormattedValue\": \"new_consolidationtypename\",\r\n        new_payerid: \"new_payerid\",\r\n        new_payertaxid: \"new_payertaxid\",\r\n        new_submitterprovidercode: \"new_submitterprovidercode\",\r\n        pics_insurancetype: \"pics_insurancetype\",\r\n        \"pics_insurancetype@OData.Community.Display.V1.FormattedValue\": \"pics_insurancetypename\"\r\n    },\r\n    contact: {\r\n        _new_managingpartyid_value: \"new_managingpartyid\",\r\n        \"_new_managingpartyid_value@OData.Community.Display.V1.FormattedValue\": \"new_managingpartyidname\",\r\n        _ownerid_value: \"ownerid\",\r\n        \"_ownerid_value@OData.Community.Display.V1.FormattedValue\": \"owneridname\",\r\n        \"_pics_address1_countyid_value@OData.Community.Display.V1.FormattedValue\": \"pics_address1_countyidname\",\r\n        address1_city: \"address1_city\",\r\n        address1_country: \"address1_country\",\r\n        address1_line1: \"address1_line1\",\r\n        address1_line2: \"address1_line2\",\r\n        address1_postalcode: \"address1_postalcode\",\r\n        birthdate: \"birthdate\",\r\n        emailaddress1: \"emailaddress1\",\r\n        firstname: \"firstname\",\r\n        fullname: \"fullname\",\r\n        gendercode: \"gendercode\",\r\n        \"gendercode@OData.Community.Display.V1.FormattedValue\": \"gendercodename\",\r\n        lastname: \"lastname\",\r\n        middlename: \"middlename\",\r\n        mobilephone: \"mobilephone\",\r\n        modifiedon: \"modifiedon\",\r\n        new_businessexit: \"new_businessexit\",\r\n        new_clientenddate: \"new_clientenddate\",\r\n        new_clientstartdate: \"new_clientstartdate\",\r\n        new_dateofhire: \"new_dateofhire\",\r\n        new_pmi: \"new_pmi\",\r\n        pics_address1state: \"pics_address1state\",\r\n        pics_client: \"pics_client\",\r\n        pics_contactid: \"pics_contactid\",\r\n        pics_employee: \"pics_employee\",\r\n        pics_employmentstatus: \"pics_employmentstatus\",\r\n        \"pics_employmentstatus@OData.Community.Display.V1.FormattedValue\": \"pics_employmentstatusname\",\r\n        pics_feinholder: \"pics_feinholder\",\r\n        pics_managingparty: \"pics_managingparty\",\r\n        pics_mpstatus: \"pics_mpstatus\",\r\n        pics_ssn: \"pics_ssn\",\r\n        \"pics_terminationdate@OData.Community.Display.V1.FormattedValue\": \"pics_terminationdate\",\r\n        pics_vendoridfea: \"pics_vendoridfea\",\r\n        pics_vendoridpics: \"pics_vendoridpics\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\",\r\n        suffix: \"suffix\",\r\n        telephone2: \"telephone2\"\r\n    },\r\n    customeraddress: {\r\n        _parentid_value: \"parentid\",\r\n        \"_parentid_value@OData.Community.Display.V1.FormattedValue\": \"parentidname\",\r\n        addressnumber: \"addressnumber\",\r\n        city: \"city\",\r\n        line1: \"line1\",\r\n        line2: \"line2\",\r\n        modifiedon: \"modifiedon\",\r\n        postalcode: \"postalcode\"\r\n    },\r\n    invoice: {\r\n        _pics_clientid_value: \"pics_clientid\",\r\n        \"_pics_clientid_value@OData.Community.Display.V1.FormattedValue\": \"pics_clientidname\",\r\n        _pics_serviceagreementid_value: \"pics_serviceagreementid\",\r\n        \"_pics_serviceagreementid_value@OData.Community.Display.V1.FormattedValue\": \"pics_serviceagreementidname\",\r\n        _salesorderid_value: \"salesorderid\",\r\n        \"_salesorderid_value@OData.Community.Display.V1.FormattedValue\": \"salesorderidname\",\r\n        invoicenumber: \"invoicenumber\",\r\n        modifiedon: \"modifiedon\",\r\n        new_balance: \"new_balance\",\r\n        \"new_balance@OData.Community.Display.V1.FormattedValue\": \"new_balanceformatted\",\r\n        new_gpcompany: \"new_gpcompany\",\r\n        \"new_gpcompany@OData.Community.Display.V1.FormattedValue\": \"new_gpcompanyname\",\r\n        statecode: \"statecode\",\r\n        \"statecode@OData.Community.Display.V1.FormattedValue\": \"statecodename\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\",\r\n        totalamount: \"totalamount\",\r\n        \"totalamount@OData.Community.Display.V1.FormattedValue\": \"totalamountformatted\"\r\n    },\r\n    new_expense: {\r\n        _createdby_value: \"createdby\",\r\n        \"_createdby_value@OData.Community.Display.V1.FormattedValue\": \"createdbyname\",\r\n        _new_budgetlineid_value: \"new_budgetlineid\",\r\n        \"_new_budgetlineid_value@OData.Community.Display.V1.FormattedValue\": \"new_budgetlineidname\",\r\n        _new_clientid_value: \"new_clientid\",\r\n        \"_new_clientid_value@OData.Community.Display.V1.FormattedValue\": \"new_clientidname\",\r\n        _new_paytoid_value: \"new_paytoid\",\r\n        \"_new_paytoid_value@OData.Community.Display.V1.FormattedValue\": \"new_paytoidname\",\r\n        _ownerid_value: \"ownerid\",\r\n        \"_ownerid_value@OData.Community.Display.V1.FormattedValue\": \"owneridname\",\r\n        _pics_consolidateclaimid_value: \"pics_consolidateclaimid\",\r\n        \"_pics_consolidateclaimid_value@OData.Community.Display.V1.FormattedValue\": \"pics_consolidateclaimidname\",\r\n        _pics_serviceagreementid_value: \"pics_serviceagreementid\",\r\n        \"_pics_serviceagreementid_value@OData.Community.Display.V1.FormattedValue\": \"pics_serviceagreementidname\",\r\n        createdon: \"createdon\",\r\n        modifiedon: \"modifiedon\",\r\n        new_description: \"new_description\",\r\n        new_expenseamount: \"new_expenseamount\",\r\n        \"new_expenseamount@OData.Community.Display.V1.FormattedValue\": \"new_expenseamountformatted\",\r\n        new_name: \"new_name\",\r\n        new_rejectedreason: \"new_rejectedreason\",\r\n        oops_readytoprocess: \"oops_readytoprocess\",\r\n        pics_batchid: \"pics_batchid\",\r\n        pics_createdbyportaluser: \"pics_createdbyportaluser\",\r\n        pics_datesubmitted: \"pics_datesubmitted\",\r\n        pics_enddate: \"pics_enddate\",\r\n        pics_errormessage: \"pics_errormessage\",\r\n        pics_fee: \"pics_fee\",\r\n        \"pics_fee@OData.Community.Display.V1.FormattedValue\": \"pics_feeformatted\",\r\n        pics_hidessreport: \"pics_hidessreport\",\r\n        pics_invoicenumber: \"pics_invoicenumber\",\r\n        pics_modifiedbyportaluser: \"pics_modifiedbyportaluser\",\r\n        pics_originalvouchernumber: \"pics_originalvouchernumber\",\r\n        pics_origination: \"pics_origination\",\r\n        pics_portalstatus: \"pics_portalstatus\",\r\n        \"pics_portalstatus@OData.Community.Display.V1.FormattedValue\": \"pics_portalstatusname\",\r\n        pics_quantity: \"pics_quantity\",\r\n        pics_startdate: \"pics_startdate\",\r\n        pics_totalamount: \"pics_totalamount\",\r\n        \"pics_totalamount@OData.Community.Display.V1.FormattedValue\": \"pics_totalamountformatted\",\r\n        pics_vouchernumber: \"pics_vouchernumber\",\r\n        statecode: \"statecode\",\r\n        \"statecode@OData.Community.Display.V1.FormattedValue\": \"statecodename\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\"\r\n    },\r\n    new_mileageentry: {\r\n        _new_budgetlineid_value: \"new_budgetlineid\",\r\n        \"_new_budgetlineid_value@OData.Community.Display.V1.FormattedValue\": \"new_budgetlineidname\",\r\n        _new_clientid_value: \"new_clientid\",\r\n        \"_new_clientid_value@OData.Community.Display.V1.FormattedValue\": \"new_clientidname\",\r\n        _new_paytoid_value: \"new_paytoid\",\r\n        \"_new_paytoid_value@OData.Community.Display.V1.FormattedValue\": \"new_paytoidname\",\r\n        _pics_consolidateclaimid_value: \"pics_ConsolidateClaimId\",\r\n        \"_pics_consolidateclaimid_value@OData.Community.Display.V1.FormattedValue\": \"pics_ConsolidateClaimIdName\",\r\n        _pics_originalmileageentryid_value: \"pics_OriginalMileageEntryId\",\r\n        \"_pics_originalmileageentryid_value@OData.Community.Display.V1.FormattedValue\": \"pics_OriginalMileageEntryIdname\",\r\n        _pics_serviceagreementid_value: \"pics_serviceagreementid\",\r\n        \"_pics_serviceagreementid_value@OData.Community.Display.V1.FormattedValue\": \"pics_serviceagreementidname\",\r\n        _transactioncurrencyid_value: \"TransactionCurrencyId\",\r\n        \"_transactioncurrencyid_value@OData.Community.Display.V1.FormattedValue\": \"TransactionCurrencyIdName\",\r\n        createdon: \"createdon\",\r\n        modifiedon: \"modifiedon\",\r\n        new_extendedmileagecost: \"new_extendedmileagecost\",\r\n        \"new_extendedmileagecost@OData.Community.Display.V1.FormattedValue\": \"new_extendedmileagecostformatted\",\r\n        new_miles: \"new_miles\",\r\n        new_name: \"new_name\",\r\n        new_parking: \"new_Parking\",\r\n        \"new_parking@OData.Community.Display.V1.FormattedValue\": \"new_Parkingformatted\",\r\n        new_rate: \"new_rate\",\r\n        \"new_rate@OData.Community.Display.V1.FormattedValue\": \"new_rateformatted\",\r\n        new_readytoprocess: \"new_ReadyToProcess\",\r\n        new_rejectreason: \"new_RejectReason\",\r\n        new_totalexpense: \"new_totalexpense\",\r\n        \"new_totalexpense@OData.Community.Display.V1.FormattedValue\": \"new_totalexpenseformatted\",\r\n        pics_batchid: \"pics_BatchID\",\r\n        pics_createdbyportaluser: \"pics_CreatedByPortalUser\",\r\n        pics_datesubmitted: \"pics_DateSubmitted\",\r\n        pics_destinationreason: \"pics_DestinationReason\",\r\n        pics_enddate: \"pics_enddate\",\r\n        pics_fee: \"pics_fee\",\r\n        \"pics_fee@OData.Community.Display.V1.FormattedValue\": \"pics_feeformatted\",\r\n        pics_hidessreport: \"pics_hidessreport\",\r\n        pics_invoicenumber: \"pics_InvoiceNumber\",\r\n        pics_modifiedbyportaluser: \"pics_ModifiedByPortalUser\",\r\n        pics_originalvouchernumber: \"pics_OriginalVoucherNumber\",\r\n        pics_origination: \"pics_Origination\",\r\n        \"pics_origination@OData.Community.Display.V1.FormattedValue\": \"pics_Originationname\",\r\n        pics_portalstatus: \"pics_PortalStatus\",\r\n        \"pics_portalstatus@OData.Community.Display.V1.FormattedValue\": \"pics_PortalStatusname\",\r\n        pics_startdate: \"pics_startdate\",\r\n        pics_vouchernumber: \"pics_vouchernumber\",\r\n        statecode: \"statecode\",\r\n        \"statecode@OData.Community.Display.V1.FormattedValue\": \"statecodename\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\"\r\n    },\r\n    new_serviceagreement: {\r\n        _new_billtoaccountid_value: \"new_billtoaccountid\",\r\n        \"_new_billtoaccountid_value@OData.Community.Display.V1.FormattedValue\": \"new_billtoaccountidname\",\r\n        _new_clientid_value: \"new_clientid\",\r\n        \"_new_clientid_value@OData.Community.Display.V1.FormattedValue\": \"new_clientidName\",\r\n        _new_serviceagreementid_value: \"new_serviceagreementid\",\r\n        \"_ownerid_value@OData.Community.Display.V1.FormattedValue\": \"owneridname\",\r\n        _pics_CompanyId_value: \"pics_CompanyId\",\r\n        \"_pics_CompanyId_value@OData.Community.Display.V1.FormattedValue\": \"pics_CompanyIdname\",\r\n        _pics_ServicingCountyId_value: \"pics_ServicingCountyId\",\r\n        \"_pics_ServicingCountyId_value@OData.Community.Display.V1.FormattedValue\": \"pics_ServicingCountyIdName\",\r\n        modifiedon: \"modifiedon\",\r\n        new_AgreementEndDate: \"new_AgreementEndDate\",\r\n        new_ProviderNumber: \"new_ProviderNumber\",\r\n        \"new_ProviderNumber@OData.Community.Display.V1.FormattedValue\": \"new_ProviderNumbername\",\r\n        new_StartDate: \"new_StartDate\",\r\n        new_StateServiceAgreementID: \"new_StateServiceAgreementID\",\r\n        new_name: \"new_name\",\r\n        new_program: \"new_Program\",\r\n        \"new_program@OData.Community.Display.V1.FormattedValue\": \"new_programname\",\r\n        new_totalremaining: \"new_totalremaining\",\r\n        \"new_totalremaining@OData.Community.Display.V1.FormattedValue\": \"new_totalremainingformatted\",\r\n        pics_BusinessModel: \"pics_BusinessModel\",\r\n        \"pics_BusinessModel@OData.Community.Display.V1.FormattedValue\": \"pics_BusinessModelname\",\r\n        pics_clientpmi: \"pics_clientpmi\",\r\n        pics_DiagnosisCode_ICD10: \"pics_DiagnosisCode_ICD10\",\r\n        pics_DiagnosisCode_ICD9: \"pics_DiagnosisCode_ICD9\",\r\n        pics_InsuredID: \"pics_InsuredID\",\r\n        pics_ProviderNumberDescription: \"pics_ProviderNumberDescription\",\r\n        \"pics_specificwaiver@OData.Community.Display.V1.FormattedValue\": \"pics_specificwaivername\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\"\r\n    },\r\n    new_serviceagreementdetail: {\r\n        _new_clientid_value: \"new_clientid\",\r\n        \"_new_clientid_value@OData.Community.Display.V1.FormattedValue\": \"new_clientidName\",\r\n        _new_serviceagreementdetailid_value: \"new_serviceagreementdetailid\",\r\n        _new_serviceagreementid_value: \"new_serviceagreementid\",\r\n        \"_new_serviceagreementid_value@OData.Community.Display.V1.FormattedValue\": \"new_serviceagreementidname\",\r\n        _new_serviceexpenseid_value: \"new_serviceexpenseid\",\r\n        \"_new_serviceexpenseid_value@OData.Community.Display.V1.FormattedValue\": \"new_serviceexpenseidName\",\r\n        _pics_SubXCodeId_value: \"pics_SubXCodeId\",\r\n        \"_pics_SubXCodeId_value@OData.Community.Display.V1.FormattedValue\": \"pics_SubXCodeIdName\",\r\n        modifiedon: \"modifiedon\",\r\n        new_HoldFromBilling: \"new_HoldFromBilling\",\r\n        new_TotalRemaining: \"new_TotalRemaining\",\r\n        \"new_TotalRemaining@OData.Community.Display.V1.FormattedValue\": \"new_TotalRemainingformatted\",\r\n        new_enddate: \"new_enddate\",\r\n        new_priceperunit: \"new_priceperunit\",\r\n        \"new_priceperunit@OData.Community.Display.V1.FormattedValue\": \"new_priceperunitformatted\",\r\n        new_spenttodate: \"new_spenttodate\",\r\n        \"new_spenttodate@OData.Community.Display.V1.FormattedValue\": \"new_spenttodateformatted\",\r\n        new_startdate: \"new_startdate\",\r\n        pics_DescriptionofSubX: \"pics_DescriptionofSubX\",\r\n        pics_Markuppercent: \"pics_Markuppercent\",\r\n        pics_Modifier1: \"pics_Modifier1\",\r\n        \"pics_Modifier1@OData.Community.Display.V1.FormattedValue\": \"pics_modifier1name\",\r\n        pics_budgetedamount: \"pics_budgetedamount\",\r\n        \"pics_budgetedamount@OData.Community.Display.V1.FormattedValue\": \"pics_budgetedamountformatted\",\r\n        pics_percentspent: \"pics_percentspent\",\r\n        pics_projectedspentamount: \"pics_projectedspentamount\",\r\n        \"pics_projectedspentamount@OData.Community.Display.V1.FormattedValue\": \"pics_projectedspentamountformatted\",\r\n        statecode: \"statecode\",\r\n        \"statecode@OData.Community.Display.V1.FormattedValue\": \"statecodename\"\r\n    },\r\n    new_timecard: {\r\n        _new_clientId_value: \"new_ClientId\",\r\n        \"_new_clientId_value@OData.Community.Display.V1.FormattedValue\": \"new_ClientIdname\",\r\n        _new_employeeid_value: \"new_employeeid\",\r\n        \"_new_employeeid_value@OData.Community.Display.V1.FormattedValue\": \"new_employeeidname\",\r\n        _pics_payperioddatesid_value: \"pics_PayPeriodDatesId\",\r\n        _pics_serviceagreementid_value: \"pics_ServiceAgreementId\",\r\n        modifiedon: \"modifiedon\",\r\n        new_name: \"new_name\",\r\n        pics_errormessage: \"pics_ErrorMessage\",\r\n        pics_origination: \"pics_Origination\",\r\n        \"pics_origination@OData.Community.Display.V1.FormattedValue\": \"pics_Originationname\",\r\n        pics_overlappingparticipant: \"pics_OverlappingParticipant\",\r\n        \"pics_overlappingparticipant@OData.Community.Display.V1.FormattedValue\": \"pics_OverlappingParticipantname\",\r\n        pics_overlappingworker: \"pics_OverlappingWorker\",\r\n        \"pics_overlappingworker@OData.Community.Display.V1.FormattedValue\": \"pics_OverlappingWorkername\",\r\n        pics_portalstatus: \"pics_PortalStatus\",\r\n        \"pics_portalstatus@OData.Community.Display.V1.FormattedValue\": \"pics_PortalStatusname\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\"\r\n    },\r\n    new_timeentrydetail: {\r\n        \"_CreatedBy_value@OData.Community.Display.V1.FormattedValue'\": \"CreatedByName\",\r\n        _new_clientid_value: \"new_clientid\",\r\n        \"_new_clientid_value@OData.Community.Display.V1.FormattedValue'\": \"new_clientidname\",\r\n        _new_employeeid_value: \"new_employeeid\",\r\n        \"_new_employeeid_value@OData.Community.Display.V1.FormattedValue\": \"new_employeeidName\",\r\n        _new_payrollbatchid_value: \"new_payrollbatchid\",\r\n        \"_new_payrollbatchid_value@OData.Community.Display.V1.FormattedValue\": \"new_payrollbatchidname\",\r\n        _new_payrolltimeid_value: \"new_payrolltimeid\",\r\n        \"_new_payrolltimeid_value@OData.Community.Display.V1.FormattedValue\": \"new_payrolltimeidname\",\r\n        _new_timecardid_value: \"new_timecardid\",\r\n        \"_new_timecardid_value@OData.Community.Display.V1.FormattedValue\": \"new_timecardidName\",\r\n        _pics_ConsolidateClaimId_value: \"pics_ConsolidateClaimId\",\r\n        \"_pics_ConsolidateClaimId_value@OData.Community.Display.V1.FormattedValue\": \"pics_ConsolidateClaimIdName\",\r\n        _pics_OriginalTimeEntryDetailId_value: \"pics_OriginalTimeEntryDetailId\",\r\n        \"_pics_OriginalTimeEntryDetailId_value@OData.Community.Display.V1.FormattedValue\": \"pics_OriginalTimeEntryDetailIdname\",\r\n        _pics_eebudgetdetailid_value: \"pics_eebudgetdetailid\",\r\n        \"_pics_eebudgetdetailid_value@OData.Community.Display.V1.FormattedValue\": \"pics_eebudgetdetailidname\",\r\n        createdon: \"CreatedOn\",\r\n        modifiedon: \"modifiedon\",\r\n        new_PayrollStatus: \"new_PayrollStatus\",\r\n        \"new_PayrollStatus@OData.Community.Display.V1.FormattedValue\": \"new_PayrollStatusname\",\r\n        new_Rate: \"new_Rate\",\r\n        \"new_Rate@OData.Community.Display.V1.FormattedValue\": \"new_Rateformatted\",\r\n        new_ReadyToProcess: \"new_ReadyToProcess\",\r\n        new_StartTimeandDate: \"new_StartTimeandDate\",\r\n        new_Unitsof15minutes: \"new_Unitsof15minutes\",\r\n        new_endtimeanddate: \"new_EndTimeandDate\",\r\n        new_exceptionpaycodetimecard: \"new_ExceptionPayCodeTimeCard\",\r\n        \"new_exceptionpaycodetimecard@OData.Community.Display.V1.FormattedValue\": \"new_ExceptionPayCodeTimeCardname\",\r\n        new_hours: \"new_hours\",\r\n        new_name: \"new_name\",\r\n        new_reasonrejected: \"new_reasonrejected\",\r\n        new_totalcost: \"new_totalcost\",\r\n        \"new_totalcost@OData.Community.Display.V1.FormattedValue\": \"new_totalcostformatted\",\r\n        pics_CreatedByPortalUser: \"pics_CreatedByPortalUser\",\r\n        pics_DatePaid: \"pics_DatePaid\",\r\n        pics_DateSubmitted: \"pics_DateSubmitted\",\r\n        pics_ErrorMessage: \"pics_ErrorMessage\",\r\n        pics_Fee: \"pics_Fee\",\r\n        \"pics_Fee@OData.Community.Display.V1.FormattedValue\": \"pics_Feeformatted\",\r\n        pics_HideSSReport: \"pics_HideSSReport\",\r\n        pics_LineNumber: \"pics_LineNumber\",\r\n        pics_ModifiedByPortalUser: \"pics_ModifiedByPortalUser\",\r\n        pics_OverrideCalculation: \"pics_OverrideCalculation\",\r\n        pics_PortalStatus: \"pics_PortalStatus\",\r\n        pics_StaffingType: \"pics_StaffingType\",\r\n        \"pics_StaffingType@OData.Community.Display.V1.FormattedValue\": \"pics_StaffingTypename\",\r\n        statecode: \"statecode\",\r\n        \"statecode@OData.Community.Display.V1.FormattedValue\": \"statecodename\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\"\r\n    },\r\n    pics_claimactivity: {\r\n        _pics_claimid_value: \"pics_claimid\",\r\n        \"_pics_claimid_value@OData.Community.Display.V1.FormattedValue\": \"pics_claimidname\",\r\n        _pics_denialcodeid_value: \"pics_denialcodeid\",\r\n        \"_pics_denialcodeid_value@OData.Community.Display.V1.FormattedValue\": \"pics_denialcodeidname\",\r\n        modifiedon: \"modifiedon\",\r\n        pics_claimicnnumber: \"pics_claimicnnumber\",\r\n        pics_comment: \"pics_comment\",\r\n        pics_denialremark: \"pics_denialremark\",\r\n        pics_statusdate: \"pics_statusdate\",\r\n        pics_totaldollarunpaid: \"pics_totaldollarunpaid\",\r\n        \"pics_totaldollarunpaid@OData.Community.Display.V1.FormattedValue\": \"pics_totaldollarunpaidformatted\",\r\n        pics_totalpaid: \"pics_totalpaid\",\r\n        \"pics_totalpaid@OData.Community.Display.V1.FormattedValue\": \"pics_totalpaidformatted\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\"\r\n    },\r\n    pics_company: {\r\n        modifiedon: \"modifiedon\",\r\n        pics_gpfeaaccount: \"pics_gpfeaaccount\",\r\n        pics_gppicsaccount: \"pics_gppicsaccount\"\r\n    },\r\n    pics_county: {\r\n        modifiedon: \"modifiedon\",\r\n        pics_account: \"pics_account\",\r\n        pics_countycode: \"pics_countycode\"\r\n    },\r\n    pics_denialcode: {\r\n        modifiedon: \"modifiedon\",\r\n        pics_explanation: \"pics_explanation\"\r\n    },\r\n    pics_employeebudgetdetail: {\r\n        \"_pics_employeeid_value@OData.Community.Display.V1.FormattedValue\": \"pics_EmployeeIdName\",\r\n        _pics_sabudgetdetailid_value: \"pics_sabudgetdetailid\",\r\n        \"_pics_sabudgetdetailid_value@OData.Community.Display.V1.FormattedValue\": \"pics_sabudgetdetailidname\",\r\n        _pics_sanumberid_value: \"pics_sanumberid\",\r\n        \"_pics_sanumberid_value@OData.Community.Display.V1.FormattedValue\": \"pics_sanumberidname\",\r\n        \"_pics_subxcodeid_value@OData.Community.Display.V1.FormattedValue\": \"pics_subxcodeidname\",\r\n        modifiedon: \"modifiedon\",\r\n        pics_descriptionsubxcode: \"pics_descriptionsubxcode\",\r\n        pics_staffingtype: \"pics_staffingtype\",\r\n        \"pics_staffingtype@OData.Community.Display.V1.FormattedValue\": \"pics_staffingtypename\"\r\n    },\r\n    pics_facilitycode: {\r\n        modifiedon: \"modifiedon\",\r\n        pics_facilitycode: \"pics_facilitycode\"\r\n    },\r\n    pics_fee: {\r\n        CreatedOn: \"CreatedOn\",\r\n        _pics_ConsolidateClaimid_value: \"pics_ConsolidateClaimid\",\r\n        \"_pics_ConsolidateClaimid_value@OData.Community.Display.V1.FormattedValue\": \"pics_ConsolidateClaimidname\",\r\n        _pics_ExpenseId_value: \"pics_ExpenseId\",\r\n        \"_pics_ExpenseId_value@OData.Community.Display.V1.FormattedValue\": \"pics_ExpenseIdname\",\r\n        _pics_MileageId_value: \"pics_MileageId\",\r\n        \"_pics_MileageId_value@OData.Community.Display.V1.FormattedValue\": \"pics_MileageIdname\",\r\n        _pics_OriginalFee_value: \"pics_OriginalFee\",\r\n        \"_pics_OriginalFee_value@OData.Community.Display.V1.FormattedValue\": \"pics_OriginalFeename\",\r\n        _pics_ServiceAgreementid_value: \"pics_ServiceAgreementid\",\r\n        \"_pics_ServiceAgreementid_value@OData.Community.Display.V1.FormattedValue\": \"pics_ServiceAgreementidname\",\r\n        _pics_sadetailid_value: \"pics_sadetailid\",\r\n        \"_pics_sadetailid_value@OData.Community.Display.V1.FormattedValue\": \"pics_sadetailidname\",\r\n        _pics_timeentrydetailid_value: \"pics_timeentrydetailid\",\r\n        \"_pics_timeentrydetailid_value@OData.Community.Display.V1.FormattedValue\": \"pics_timeentrydetailidname\",\r\n        modifiedon: \"modifiedon\",\r\n        pics_DateofService: \"pics_DateofService\",\r\n        pics_Hold: \"pics_Hold\",\r\n        \"pics_Hold@OData.Community.Display.V1.FormattedValue\": \"pics_Holdname\",\r\n        pics_ReadytoProcess: \"pics_ReadytoProcess\",\r\n        pics_amount: \"pics_amount\",\r\n        \"pics_amount@OData.Community.Display.V1.FormattedValue\": \"pics_amountformatted\",\r\n        pics_hidessreport: \"pics_hidessreport\",\r\n        pics_name: \"pics_name\",\r\n        statecode: \"statecode\",\r\n        \"statecode@OData.Community.Display.V1.FormattedValue\": \"statecodename\",\r\n        statuscode: \"statuscode\",\r\n        \"statuscode@OData.Community.Display.V1.FormattedValue\": \"statuscodename\"\r\n    },\r\n    pics_payperiod: {\r\n        modifiedon: \"modifiedon\",\r\n        pics_name: \"pics_name\",\r\n        pics_startthursday: \"pics_startthursday\"\r\n    },\r\n    pics_subxcode: {\r\n        modifiedon: \"modifiedon\",\r\n        pics_expenseaccount: \"pics_expenseaccount\",\r\n        pics_subxtype: \"pics_subxtype\",\r\n        \"pics_subxtype@OData.Community.Display.V1.FormattedValue\": \"pics_subxtypename\"\r\n    },\r\n    po_consolidateclaims: {\r\n        _pics_clientid_value: \"pics_clientid\",\r\n        \"_pics_clientid_value@OData.Community.Display.V1.FormattedValue\": \"pics_clientidname\",\r\n        _pics_providerid_value: \"pics_providerid\",\r\n        \"_pics_providerid_value@OData.Community.Display.V1.FormattedValue\": \"pics_provideridname\",\r\n        modifiedon: \"modifiedon\",\r\n        pics_bridgeviewbatch: \"pics_bridgeviewbatch\",\r\n        pics_enddate: \"pics_enddate\",\r\n        pics_readytoprocess: \"pics_readytoprocess\",\r\n        pics_startdate: \"pics_startdate\",\r\n        pics_waivertype: \"pics_waivertype\",\r\n        po_name: \"po_name\"\r\n    },\r\n    product: {\r\n        _pics_facilitycode_value: \"pics_facilitycode\",\r\n        \"_pics_facilitycode_value@OData.Community.Display.V1.FormattedValue\": \"pics_facilitycodename\",\r\n        \"_pics_subxcodeid_value@OData.Community.Display.V1.FormattedValue\": \"pics_subxcodeidname\",\r\n        modifiedon: \"modifiedon\",\r\n        new_modifier2: \"new_modifier2\",\r\n        pics_staffingtype: \"pics_staffingtype\",\r\n        price: \"price\",\r\n        \"price@OData.Community.Display.V1.FormattedValue\": \"priceformatted\"\r\n    },\r\n    systemuser: {\r\n        domainname: \"domainname\",\r\n        firstname: \"firstname\",\r\n        fullname: \"fullname\",\r\n        lastname: \"lastname\",\r\n        modifiedon: \"modifiedon\"\r\n    }\r\n};\r\n\r\nfunction objectKeysToLowerCase(obj) {\r\n    if (!obj) return obj;\r\n\r\n    return Object.entries(obj).reduce((acc, [key, value]) => {\r\n        if (key.includes(\"@\")) {\r\n            const keySplit = key.split(\"@\");\r\n            acc[`${keySplit[0].toLowerCase()}@${keySplit[1]}`] = value;\r\n            return acc;\r\n        }\r\n\r\n        acc[key.toLowerCase()] = value;\r\n        return acc;\r\n    }, {});\r\n}\r\n\r\nfunction extractEntityMapSourceColNames(map, strip = false) {\r\n    const names = strip ? Object.keys(map).map((key) => {\r\n        const name = key.includes(\"@\") ? key.split(\"@\")[0] : key;\r\n\r\n        if (name.startsWith(\"_\")) {\r\n            return name.substring(1, name.indexOf(\"_value\") === -1 ? name.length - 1 : name.indexOf(\"_value\"));\r\n        }\r\n\r\n        return name;\r\n    })\r\n        : Object.keys(map).map((key) => key.includes(\"@\") ? key.split(\"@\")[0] : key);\r\n\r\n    return Array.from(new Set(names));\r\n}\r\n\r\nconst tableName = workflowContext.actions.Compose_Table_Logical_Name.outputs;\r\nconst entityMap = objectKeysToLowerCase(entityMaps[tableName] || {});\r\n\r\nreturn {\r\n    tableName,\r\n    primaryIdColumn: `${tableName}id`,\r\n    entityMap,\r\n    sourceColumnNames: extractEntityMapSourceColNames(entityMap, true),\r\n    sourceColumnNamesOData: extractEntityMapSourceColNames(entityMap),\r\n    targetColumnNames: Array.from(new Set(Object.values(entityMap)))\r\n};"
+                        },
+                        "runAfter": {
+                            "Compose_Table_Collection_Name": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Compose_Table_Logical_Name": {
+                        "type": "Compose",
+                        "inputs": "@first(items('For_Each_Table_in_Trigger_Body'))"
+                    },
+                    "Compose_Table_Collection_Name": {
+                        "type": "Compose",
+                        "inputs": "@last(items('For_Each_Table_in_Trigger_Body'))",
+                        "runAfter": {
+                            "Compose_Table_Logical_Name": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Until_Response_'nextLink'_is_empty": {
+                        "type": "Until",
+                        "expression": "@equals(body('Get_Rows_Since_Last_Run')?['@odata.nextLink'],null)",
+                        "limit": {
+                            "timeout": "PT1H"
+                        },
+                        "actions": {
+                            "Get_Rows_Since_Last_Run": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "get",
+                                    "headers": {
+                                        "prefer": "odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(outputs('Compose_Table_Collection_Name'))}",
+                                    "queries": {
+                                        "$select": "@join(outputs('Build_Table_Mapping_Data')?['sourceColumnNamesOData'], ',')",
+                                        "$filter": "modifiedon gt @{variables('lastRunTime')}",
+                                        "$orderby": "modifiedon",
+                                        "$top": "@variables('topCount')"
+                                    }
+                                }
+                            },
+                            "If_Has_Rows": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "greater": [
+                                                "@length(body('Get_Rows_Since_Last_Run')?['value'])",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Build_Mapped_Ids_Value_-_Retrieve": {
+                                        "type": "JavaScriptCode",
+                                        "inputs": {
+                                            "code": "const responseEntities = workflowContext.actions.Get_Rows_Since_Last_Run.outputs.body.value;\r\n\r\nconst idProp = workflowContext.actions.Build_Table_Mapping_Data.outputs.primaryIdColumn;\r\n\r\nreturn responseEntities.reduce((acc, entity, i, arr) => {\r\n  if (!entity[idProp]) return acc;\r\n  acc += `'${entity[idProp]}'`;\r\n  if (i !== arr.length - 1) acc += ', ';\r\n  return acc;\r\n}, '');"
+                                        }
+                                    },
+                                    "Get_Ordered_Rows": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "query": "SELECT @{join(outputs('Build_Table_Mapping_Data')?['targetColumnNames'], ', ')}, @{outputs('Build_Table_Mapping_Data')?['primaryIdColumn']} FROM stg.@{outputs('Build_Table_Mapping_Data')?['tableName']} WHERE @{outputs('Build_Table_Mapping_Data')?['primaryIdColumn']} IN (@{outputs('Build_Mapped_Ids_Value_-_Retrieve')})"
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-6",
+                                                "operationId": "executeQuery",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Build_Mapped_Ids_Value_-_Retrieve": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    },
+                                    "Build_SQL_Query": {
+                                        "type": "JavaScriptCode",
+                                        "inputs": {
+                                            "code": "function isValueString(value) {\r\n    return typeof value === \"string\" || value instanceof String;\r\n}\r\n\r\nfunction isValueBoolean(value) {\r\n    return typeof value === \"boolean\" || value instanceof Boolean;\r\n}\r\n\r\nfunction isStringDate(dateString) {\r\n    return !isNaN(Date.parse(dateString));\r\n}\r\n\r\nfunction parseValueSQLString(value) {\r\n    if (isValueString(value)) {\r\n        if (value.includes(\"'\")) {\r\n            value = value.replace(/'/g, \"''\");\r\n        }\r\n\r\n        if (isStringDate(value)) {\r\n            value = value.replace(\"Z\", \"\");\r\n        }\r\n        return value === null || value === undefined ? \"null\" : `'${value}'`;\r\n    }\r\n\r\n    if (isValueBoolean(value)) {\r\n        return value ? \"1\" : \"0\";\r\n    }\r\n\r\n    return value === null || value === undefined ? \"null\" : `${value}`;\r\n}\r\n\r\nfunction objectKeysToLowerCase(obj) {\r\n    return Object.entries(obj).reduce((acc, [key, value]) => {\r\n        const lowerKey = key.toLowerCase();\r\n        acc[lowerKey] = value;\r\n        return acc;\r\n    }, {});\r\n}\r\n\r\nfunction sortObjectKeys(obj) {\r\n    const sortedKeys = Object.keys(obj).sort();\r\n    return sortedKeys.reduce((acc, key) => {\r\n        acc[key] = obj[key];\r\n        return acc;\r\n    }, {});\r\n}\r\n\r\nconst {\r\n    tableName,\r\n    primaryIdColumn,\r\n    entityMap,\r\n    sourceColumnNames\r\n} = workflowContext.actions.Build_Table_Mapping_Data.outputs;\r\n\r\nconst sourceRows = workflowContext.actions.Get_Rows_Since_Last_Run.outputs.body.value;\r\nconst targetRowsResponse = workflowContext.actions.Get_Ordered_Rows.outputs.body;\r\nconst targetRows = targetRowsResponse.length ? targetRowsResponse[0].map(objectKeysToLowerCase) : [];\r\n\r\nreturn sourceRows.map(sourceRow => {\r\n    const targetId = sourceRow[primaryIdColumn].toLowerCase();\r\n    const targetRow = targetRows.find(targetRow => (targetRow[primaryIdColumn] ? targetRow[primaryIdColumn].toLowerCase() : \"\") === targetId);\r\n\r\n    const sourceProps = Object.entries(sourceRow).filter(([rowKey, _]) => sourceColumnNames.some(mapKey => mapKey === rowKey));\r\n\r\n    const body = targetRow ?\r\n        sourceProps.reduce((acc, [key, value]) => {\r\n            const mappedKey = entityMap[key];\r\n            const parsedSourceValue = parseValueSQLString(value);\r\n            if (mappedKey && targetRow[mappedKey] !== parsedSourceValue) {\r\n                acc[mappedKey] = parsedSourceValue;\r\n            }\r\n            return acc;\r\n        }, {})\r\n        : sourceProps.reduce((acc, [key, value]) => {\r\n            if (entityMap[key]) acc[entityMap[key]] = parseValueSQLString(value);\r\n            return acc;\r\n        }, {});\r\n\r\n    let sortedBody;\r\n\r\n    if (targetRow) {\r\n        // Sort the object alphabetically for readability in the SQL statement\r\n        sortedBody = sortObjectKeys(body);\r\n\r\n        return Object.keys(sortedBody).length > 0 ?\r\n            `UPDATE stg.${tableName}\r\n         SET ${Object.entries(sortedBody).map(([key, value]) => `${key} = ${value}`).join(\", \")}\r\n         WHERE ${primaryIdColumn} = '${targetId}';`\r\n            : null;\r\n    }\r\n\r\n    // Set the targetId in the body for Create operation\r\n    body[primaryIdColumn] = targetId;\r\n\r\n    // Sort the object alphabetically for readability in the SQL statement\r\n    sortedBody = sortObjectKeys(body);\r\n\r\n    return `INSERT INTO stg.${tableName} (${Object.keys(sortedBody).join(\", \")})\r\n            VALUES (${Object.values(sortedBody).join(\", \")});`;\r\n}).filter(sql => sql);\r\n"
+                                        },
+                                        "runAfter": {
+                                            "Get_Ordered_Rows": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    },
+                                    "For_Each_Query": {
+                                        "type": "Foreach",
+                                        "foreach": "@outputs('Build_SQL_Query')",
+                                        "actions": {
+                                            "Execute_query": {
+                                                "type": "ServiceProvider",
+                                                "inputs": {
+                                                    "parameters": {
+                                                        "query": "@items('For_Each_Query')"
+                                                    },
+                                                    "serviceProviderConfiguration": {
+                                                        "connectionName": "sql-6",
+                                                        "operationId": "executeQuery",
+                                                        "serviceProviderId": "/serviceProviders/sql"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Build_SQL_Query": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {}
+                                },
+                                "runAfter": {
+                                    "Get_Rows_Since_Last_Run": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "If_MaxModifiedOn_Has_Value_and_Is_Not_Debug_Mode": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Initialize_topCount": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_lastRunTime_-_5_Years_Ago": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "lastRunTime",
+                            "type": "string",
+                            "value": "@addDays(trigger().startTime, -1825)"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "Initialize_isDebugMode": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "isDebugMode",
+                            "type": "boolean",
+                            "value": true
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_lastRunTime_-_5_Years_Ago": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_topCount": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "topCount",
+                            "type": "integer",
+                            "value": 20
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_isDebugMode": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "method": "POST",
+                    "schema": {
+                        "$schema": "http://json-schema.org/draft-07/schema#",
+                        "definitions": {
+                            "tableLogicalName": {
+                                "type": "string",
+                                "enum": [
+                                    "account",
+                                    "contact",
+                                    "pics_claimactivity",
+                                    "pics_company",
+                                    "po_consolidateclaims",
+                                    "pics_county",
+                                    "pics_denialcode",
+                                    "pics_employeebudgetdetail",
+                                    "pics_payperiod",
+                                    "pics_facilitycode",
+                                    "pics_fee",
+                                    "invoice",
+                                    "new_expense",
+                                    "new_mileageentry",
+                                    "new_timecard",
+                                    "new_timeentrydetail",
+                                    "new_serviceagreement",
+                                    "new_serviceagreementdetail",
+                                    "pics_subxcode",
+                                    "product",
+                                    "systemuser",
+                                    "customeraddress"
+                                ]
+                            },
+                            "tableCollectionName": {
+                                "type": "string",
+                                "enum": [
+                                    "accounts",
+                                    "contacts",
+                                    "pics_claimactivities",
+                                    "pics_companies",
+                                    "po_consolidateclaimses",
+                                    "pics_counties",
+                                    "pics_denialcodes",
+                                    "pics_employeebudgetdetails",
+                                    "pics_payperiods",
+                                    "pics_facilitycodes",
+                                    "pics_fees",
+                                    "invoices",
+                                    "new_expenses",
+                                    "new_mileageentries",
+                                    "new_timecards",
+                                    "new_timeentrydetails",
+                                    "new_serviceagreements",
+                                    "new_serviceagreementdetails",
+                                    "pics_subxcodes",
+                                    "products",
+                                    "systemusers",
+                                    "customeraddresses"
+                                ]
+                            }
+                        },
+                        "type": "object",
+                        "properties": {
+                            "sourceTableNames": {
+                                "type": "array",
+                                "items": {
+                                    "type": "array",
+                                    "minItems": 2,
+                                    "maxItems": 2,
+                                    "items": [
+                                        {
+                                            "$ref": "#/definitions/tableLogicalName"
+                                        },
+                                        {
+                                            "$ref": "#/definitions/tableCollectionName"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "sourceTableNames"
+                        ],
+                        "additionalProperties": false
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

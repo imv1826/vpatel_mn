@@ -1,0 +1,176 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_Each_Config": {
+                "type": "Foreach",
+                "foreach": "@variables('entitySyncConfigs')",
+                "actions": {
+                    "Bulk_Sync_Entities_in_Staging_DB": {
+                        "type": "Http",
+                        "inputs": {
+                            "uri": "https://lssintegrations-logic.azurewebsites.net:443/api/Staging-CRM2STG-BulkSync/triggers/When_a_HTTP_request_is_received/invoke?api-version=2022-05-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=ZSQxVWwGhE8kqxaDS_5482XGvX6Z4gb3j-4SCOPDw8A",
+                            "method": "POST",
+                            "body": "@items('For_Each_Config')"
+                        },
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Initialize_entitySyncConfigs": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_entitySyncConfigs": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "entitySyncConfigs",
+                            "type": "array",
+                            "value": [
+                                {
+                                    "tableName": "account",
+                                    "collectionName": "accounts",
+                                    "primaryAttribute": "accountid"
+                                },
+                                {
+                                    "tableName": "contact",
+                                    "collectionName": "contacts",
+                                    "primaryAttribute": "contactid"
+                                },
+                                {
+                                    "tableName": "pics_claimactivity",
+                                    "collectionName": "pics_claimactivities",
+                                    "primaryAttribute": "pics_claimactivityid"
+                                },
+                                {
+                                    "tableName": "pics_company",
+                                    "collectionName": "pics_companies",
+                                    "primaryAttribute": "pics_companyid"
+                                },
+                                {
+                                    "tableName": "pics_county",
+                                    "collectionName": "pics_counties",
+                                    "primaryAttribute": "pics_countyid"
+                                },
+                                {
+                                    "tableName": "po_consolidateclaims",
+                                    "collectionName": "po_consolidateclaimses",
+                                    "primaryAttribute": "po_consolidateclaimsid"
+                                },
+                                {
+                                    "tableName": "pics_denialcode",
+                                    "collectionName": "pics_denialcodes",
+                                    "primaryAttribute": "pics_denialcodeid"
+                                },
+                                {
+                                    "tableName": "pics_employeebudgetdetail",
+                                    "collectionName": "pics_employeebudgetdetails",
+                                    "primaryAttribute": "pics_employeebudgetdetailid"
+                                },
+                                {
+                                    "tableName": "pics_payperiod",
+                                    "collectionName": "pics_payperiods",
+                                    "primaryAttribute": "pics_payperiodid"
+                                },
+                                {
+                                    "tableName": "pics_facilitycode",
+                                    "collectionName": "pics_facilitycodes",
+                                    "primaryAttribute": "pics_facilitycodeid"
+                                },
+                                {
+                                    "tableName": "pics_fee",
+                                    "collectionName": "pics_fees",
+                                    "primaryAttribute": "pics_feeid"
+                                },
+                                {
+                                    "tableName": "invoice",
+                                    "collectionName": "invoices",
+                                    "primaryAttribute": "invoiceid"
+                                },
+                                {
+                                    "tableName": "new_expense",
+                                    "collectionName": "new_expenses",
+                                    "primaryAttribute": "new_expenseid"
+                                },
+                                {
+                                    "tableName": "new_mileageentry",
+                                    "collectionName": "new_mileageentries",
+                                    "primaryAttribute": "new_mileageentryid"
+                                },
+                                {
+                                    "tableName": "new_timecard",
+                                    "collectionName": "new_timecards",
+                                    "primaryAttribute": "new_timecardid"
+                                },
+                                {
+                                    "tableName": "new_timeentrydetail",
+                                    "collectionName": "new_timeentrydetails",
+                                    "primaryAttribute": "new_timeentrydetailid"
+                                },
+                                {
+                                    "tableName": "new_serviceagreement",
+                                    "collectionName": "new_serviceagreements",
+                                    "primaryAttribute": "new_serviceagreementid"
+                                },
+                                {
+                                    "tableName": "new_serviceagreementdetail",
+                                    "collectionName": "new_serviceagreementdetails",
+                                    "primaryAttribute": "new_serviceagreementdetailid"
+                                },
+                                {
+                                    "tableName": "pics_subxcode",
+                                    "collectionName": "pics_subxcodes",
+                                    "primaryAttribute": "pics_subxcodeid"
+                                },
+                                {
+                                    "tableName": "product",
+                                    "collectionName": "products",
+                                    "primaryAttribute": "productid"
+                                },
+                                {
+                                    "tableName": "systemuser",
+                                    "collectionName": "systemusers",
+                                    "primaryAttribute": "systemuserid"
+                                },
+                                {
+                                    "tableName": "customeraddress",
+                                    "collectionName": "customeraddresses",
+                                    "primaryAttribute": "customeraddressid"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Every_Day_at_Midnight_(CST)": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "schedule": {
+                        "hours": [
+                            0
+                        ],
+                        "minutes": [
+                            0
+                        ]
+                    },
+                    "timeZone": "Central Standard Time"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

@@ -1,0 +1,1076 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each_mileage_message": {
+                "type": "Foreach",
+                "foreach": "@triggerBody()",
+                "actions": {
+                    "Parse_mileage_message": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each_mileage_message')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "contentData": {
+                                        "type": "object",
+                                        "properties": {
+                                            "initiatedOn": {
+                                                "type": "integer"
+                                            },
+                                            "messageName": {
+                                                "type": "string"
+                                            },
+                                            "logLevel": {
+                                                "type": "string"
+                                            },
+                                            "document": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "new_budgetlineid": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_budgetlineid_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_mileageentryid": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_totalexpense": {
+                                                        "type": "number"
+                                                    },
+                                                    "new_totalexpense_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_batchid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_destinationreason": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_invoicenumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_startdate": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_startdate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_vouchernumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "transactioncurrencyid_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreement.new_gpcompany": {
+                                                        "type": "integer"
+                                                    },
+                                                    "agreement.new_serviceagreementid": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreement.new_gpcompany_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreement.county.pics_countyid": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreement.county.pics_county": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreement.company.pics_gpfeaaccount": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreement.company.pics_companyid": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreement.company.pics_gppicsaccount": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreementdetail.new_serviceagreementdetailid": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreementdetail.subcode.pics_mileageaccount": {
+                                                        "type": "string"
+                                                    },
+                                                    "agreementdetail.subcode.pics_subxcodeid": {
+                                                        "type": "string"
+                                                    },
+                                                    "contact.pics_vendoridpics": {
+                                                        "type": "string"
+                                                    },
+                                                    "contact.pics_vendoridfea": {
+                                                        "type": "string"
+                                                    },
+                                                    "contact.contactid": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "contentType": {
+                                        "type": "string"
+                                    },
+                                    "userProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "request-Id": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "messageId": {
+                                        "type": "string"
+                                    },
+                                    "scheduledEnqueueTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "sessionId": {
+                                        "type": "string"
+                                    },
+                                    "correlationId": {
+                                        "type": "string"
+                                    },
+                                    "timeToLive": {
+                                        "type": "string"
+                                    },
+                                    "deliveryCount": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedSequenceNumber": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockedUntilUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockToken": {
+                                        "type": "string"
+                                    },
+                                    "sequenceNumber": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Is_PICS_mileage": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@body('Parse_mileage_message')?['contentData']?['document']?['agreement.new_gpcompany']",
+                                        "@100000000"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Check_for_existing_vendor_in_GP_PICS": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[dbo].[PM00200]",
+                                        "columnValuesForWhereCondition": {
+                                            "VENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridpics']}"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-11",
+                                        "operationId": "getRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Is_existing_PICS_vendor_found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "greater": [
+                                                "@length(body('Check_for_existing_vendor_in_GP_PICS'))",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Check_for_existing_PICS_PM_transaction": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "tableName": "[dbo].[PM00400]",
+                                                "columnValuesForWhereCondition": {
+                                                    "VCHNUMWK": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                    "BACHNUMB": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_batchid']}"
+                                                }
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-11",
+                                                "operationId": "getRows",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        }
+                                    },
+                                    "Is_existing_PICS_PM_transaction_found": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "greater": [
+                                                        "@length(body('Check_for_existing_PICS_PM_transaction'))",
+                                                        "@0"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {},
+                                        "else": {
+                                            "actions": {
+                                                "Insert_PICS_debit_distribution": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "storedProcedureName": "taPMDistribution",
+                                                            "storedProcedureParameters": {
+                                                                "I_vACTNUMST": "@{concat(body('Parse_mileage_message')?['contentData']?['document']?['agreement.company.pics_gppicsaccount'], '-', body('Parse_mileage_message')?['contentData']?['document']?['agreementdetail.subcode.pics_expenseaccount'], '-0000')}",
+                                                                "I_vDEBITAMT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                "I_vDistRef": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_destinationreason']}",
+                                                                "I_vDISTTYPE": "6",
+                                                                "I_vDOCTYPE": "1",
+                                                                "I_vVCHRNMBR": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                "I_vVENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridpics']}"
+                                                            },
+                                                            "includeEmptyResultSets": false
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "sql-11",
+                                                            "operationId": "executeStoredProcedure",
+                                                            "serviceProviderId": "/serviceProviders/sql"
+                                                        }
+                                                    }
+                                                },
+                                                "Is_insert_PICS_debit_distribution_succeeded": {
+                                                    "type": "If",
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "equals": [
+                                                                    "@body('Insert_PICS_debit_distribution')?['outputParameters']?['@O_iErrorState']",
+                                                                    "@0"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "actions": {
+                                                        "Insert_PICS_credit_distribution": {
+                                                            "type": "ServiceProvider",
+                                                            "inputs": {
+                                                                "parameters": {
+                                                                    "storedProcedureName": "taPMDistribution",
+                                                                    "storedProcedureParameters": {
+                                                                        "I_vACTNUMST": "@{concat(body('Parse_mileage_message')?['contentData']?['document']?['agreement.company.pics_gppicsaccount'], '-2001-0000')}",
+                                                                        "I_vCRDTAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                        "I_vDistRef": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_destinationreason']}",
+                                                                        "I_vDISTTYPE": "2",
+                                                                        "I_vDOCTYPE": "1",
+                                                                        "I_vVCHRNMBR": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                        "I_vVENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridpics']}"
+                                                                    },
+                                                                    "includeEmptyResultSets": false
+                                                                },
+                                                                "serviceProviderConfiguration": {
+                                                                    "connectionName": "sql-11",
+                                                                    "operationId": "executeStoredProcedure",
+                                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Is_insert_PICS_credit_distribution_succeeded": {
+                                                            "type": "If",
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "equals": [
+                                                                            "@body('Insert_PICS_credit_distribution')?['outputParameters']?['@oErrString']",
+                                                                            "@0"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "actions": {
+                                                                "Insert_PICS_PM_transaction": {
+                                                                    "type": "ServiceProvider",
+                                                                    "inputs": {
+                                                                        "parameters": {
+                                                                            "storedProcedureName": "taPMTransactionInsert",
+                                                                            "storedProcedureParameters": {
+                                                                                "I_vBACHNUMB": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_batchid']}",
+                                                                                "I_vCHRGAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                                "I_vCREATEDIST": "0",
+                                                                                "I_vTRXDSCRN": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_destinationreason']}",
+                                                                                "I_vDOCDATE": "@{if(empty(body('Parse_mileage_message')?['contentData']?['document']?['pics_startdate']), '01-01-1900', formatDateTime(body('Parse_mileage_message')?['contentData']?['document']?['pics_startdate'], 'MM-dd-yyyy'))}",
+                                                                                "I_vDOCNUMBR": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_invoicenumber']}",
+                                                                                "I_vDOCTYPE": "@{1}",
+                                                                                "I_vPOSTEDDT": "@{formatDateTime(utcNow(), 'MM-dd-yyyy')}",
+                                                                                "I_vPRCHAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                                "I_vDOCAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                                "I_vVCHNUMWK": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                                "I_vVENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridpics']}"
+                                                                            },
+                                                                            "includeEmptyResultSets": false
+                                                                        },
+                                                                        "serviceProviderConfiguration": {
+                                                                            "connectionName": "sql-11",
+                                                                            "operationId": "executeStoredProcedure",
+                                                                            "serviceProviderId": "/serviceProviders/sql"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Is_insert_PICS_PM_transaction_succeeded": {
+                                                                    "type": "If",
+                                                                    "expression": {
+                                                                        "and": [
+                                                                            {
+                                                                                "equals": [
+                                                                                    "@body('Insert_PICS_PM_transaction')?['outputParameters']?['@O_iErrorState']",
+                                                                                    "@0"
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "actions": {
+                                                                        "Set_IsSuccess_variable_to_true": {
+                                                                            "type": "SetVariable",
+                                                                            "inputs": {
+                                                                                "name": "IsSuccess",
+                                                                                "value": true
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "else": {
+                                                                        "actions": {
+                                                                            "Log_insert_PICS_PM_transaction_error": {
+                                                                                "type": "ServiceProvider",
+                                                                                "inputs": {
+                                                                                    "parameters": {
+                                                                                        "entityName": "integrationslog",
+                                                                                        "message": {
+                                                                                            "contentData": {
+                                                                                                "workflowId": "@{workflow().id}",
+                                                                                                "runId": "@{workflow().run.id}",
+                                                                                                "source": "dataverse",
+                                                                                                "sourceEntity": "new_mileageentry",
+                                                                                                "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageid']}",
+                                                                                                "target": "gppic",
+                                                                                                "targetEntity": "pmtransaction",
+                                                                                                "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                                                "timestamp": "@{utcNow()}",
+                                                                                                "logLevel": "Error",
+                                                                                                "message": "@{replace(trim(body('Insert_PICS_PM_transaction')?['outputParameters']?['@oErrString']), ' ', ',')}"
+                                                                                            },
+                                                                                            "contentType": "@item()?['contentType']",
+                                                                                            "sessionId": "econnect",
+                                                                                            "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                                                        }
+                                                                                    },
+                                                                                    "serviceProviderConfiguration": {
+                                                                                        "connectionName": "serviceBus",
+                                                                                        "operationId": "sendMessage",
+                                                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "runAfter": {
+                                                                        "Insert_PICS_PM_transaction": [
+                                                                            "SUCCEEDED"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "else": {
+                                                                "actions": {
+                                                                    "Log_insert_PICS_credit_distribution_error": {
+                                                                        "type": "ServiceProvider",
+                                                                        "inputs": {
+                                                                            "parameters": {
+                                                                                "entityName": "integrationslog",
+                                                                                "message": {
+                                                                                    "contentData": {
+                                                                                        "workflowId": "@{workflow().id}",
+                                                                                        "runId": "@{workflow().run.id}",
+                                                                                        "source": "dataverse",
+                                                                                        "sourceEntity": "new_mileageentry",
+                                                                                        "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageid']}",
+                                                                                        "target": "gppic",
+                                                                                        "targetEntity": "pmdistribution",
+                                                                                        "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                                        "timestamp": "@{utcNow()}",
+                                                                                        "logLevel": "Error",
+                                                                                        "message": "@{replace(trim(body('Insert_PICS_credit_distribution')?['outputParameters']?['@oErrString']), ' ', ',')}"
+                                                                                    },
+                                                                                    "contentType": "@item()?['contentType']",
+                                                                                    "sessionId": "econnect",
+                                                                                    "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                                                }
+                                                                            },
+                                                                            "serviceProviderConfiguration": {
+                                                                                "connectionName": "serviceBus",
+                                                                                "operationId": "sendMessage",
+                                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "Insert_PICS_credit_distribution": [
+                                                                    "SUCCEEDED"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "else": {
+                                                        "actions": {
+                                                            "Log_insert_PICS_debit_distribution_error": {
+                                                                "type": "ServiceProvider",
+                                                                "inputs": {
+                                                                    "parameters": {
+                                                                        "entityName": "integrationslog",
+                                                                        "message": {
+                                                                            "contentData": {
+                                                                                "workflowId": "@{workflow().id}",
+                                                                                "runId": "@{workflow().run.id}",
+                                                                                "source": "dataverse",
+                                                                                "sourceEntity": "new_mileageentry",
+                                                                                "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageid']}",
+                                                                                "target": "gppic",
+                                                                                "targetEntity": "pmdistribution",
+                                                                                "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                                "timestamp": "@{utcNow()}",
+                                                                                "logLevel": "Error",
+                                                                                "message": "@{replace(trim(body('Insert_PICS_debit_distribution')?['outputParameters']?['@oErrString']), ' ', ',')}"
+                                                                            },
+                                                                            "contentType": "@item()?['contentType']",
+                                                                            "sessionId": "econnect",
+                                                                            "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                                        }
+                                                                    },
+                                                                    "serviceProviderConfiguration": {
+                                                                        "connectionName": "serviceBus",
+                                                                        "operationId": "sendMessage",
+                                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Insert_PICS_debit_distribution": [
+                                                            "SUCCEEDED"
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Check_for_existing_PICS_PM_transaction": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Log_GP_PICS_vendor_not_found_error": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "entityName": "integrationslog",
+                                                    "message": {
+                                                        "contentData": {
+                                                            "workflowId": "@{workflow().id}",
+                                                            "runId": "@{workflow().run.id}",
+                                                            "source": "dataverse",
+                                                            "sourceEntity": "new_mileageentry",
+                                                            "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageentryid']}",
+                                                            "target": "gppic",
+                                                            "targetEntity": "vendor",
+                                                            "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridpics']}",
+                                                            "timestamp": "@{utcNow()}",
+                                                            "logLevel": "Error",
+                                                            "message": "Unable to find vendor in GP PICS. "
+                                                        },
+                                                        "contentType": "@item()?['contentType']",
+                                                        "sessionId": "logger",
+                                                        "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                    }
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "serviceBus",
+                                                    "operationId": "sendMessage",
+                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Check_for_existing_vendor_in_GP_PICS": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Reset_IsSuccess_variable": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Is_FEA_mileage": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@body('Parse_mileage_message')?['contentData']?['document']?['agreement.new_gpcompany']",
+                                        "@100000001"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Check_for_existing_vendor_in_GP_FEA": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[dbo].[PM00400]",
+                                        "columnValuesForWhereCondition": {
+                                            "VENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridfea']}"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-8",
+                                        "operationId": "getRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Is_existing_FEA_vendor_found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "greater": [
+                                                "@length(body('Check_for_existing_vendor_in_GP_FEA'))",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Check_for_existing_FEA_PM_transaction": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "tableName": "[dbo].[PM10000]",
+                                                "columnValuesForWhereCondition": {
+                                                    "VCHNUMWK": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                    "BACHNUMB": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_batchid']}"
+                                                }
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-8",
+                                                "operationId": "getRows",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        }
+                                    },
+                                    "Is_existing_FEA_PM_transaction_found": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "greater": [
+                                                        "@length(body('Check_for_existing_FEA_PM_transaction'))",
+                                                        "@0"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {},
+                                        "else": {
+                                            "actions": {
+                                                "Insert_FEA_debit_distribution": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "storedProcedureName": "taPMDistribution",
+                                                            "storedProcedureParameters": {
+                                                                "I_vACTNUMST": "@{concat(body('Parse_mileage_message')?['contentData']?['document']?['agreement.company.pics_gpfeaaccount'], '-', body('Parse_mileage_message')?['contentData']?['document']?['agreementdetail.subcode.pics_expenseaccount'], '-0000')}",
+                                                                "I_vDEBITAMT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                "I_vDistRef": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_destinationreason']}",
+                                                                "I_vDISTTYPE": "6",
+                                                                "I_vDOCTYPE": "1",
+                                                                "I_vVCHRNMBR": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                "I_vVENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridfea']}"
+                                                            },
+                                                            "includeEmptyResultSets": false
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "sql-8",
+                                                            "operationId": "executeStoredProcedure",
+                                                            "serviceProviderId": "/serviceProviders/sql"
+                                                        }
+                                                    }
+                                                },
+                                                "Is_insert_FEA_debit_distribution_succeeded": {
+                                                    "type": "If",
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "equals": [
+                                                                    "@body('Insert_FEA_debit_distribution')?['outputParameters']?['@O_iErrorState']",
+                                                                    "@0"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "actions": {
+                                                        "Insert_FEA_credit_distribution": {
+                                                            "type": "ServiceProvider",
+                                                            "inputs": {
+                                                                "parameters": {
+                                                                    "storedProcedureName": "taPMDistribution",
+                                                                    "storedProcedureParameters": {
+                                                                        "I_vACTNUMST": "@{concat(body('Parse_mileage_message')?['contentData']?['document']?['agreement.company.pics_gpfeaaccount'], '-2001-0000')}",
+                                                                        "I_vCRDTAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                        "I_vDistRef": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_destinationreason']}",
+                                                                        "I_vDISTTYPE": "2",
+                                                                        "I_vDOCTYPE": "1",
+                                                                        "I_vVCHRNMBR": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                        "I_vVENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridfea']}"
+                                                                    },
+                                                                    "includeEmptyResultSets": false
+                                                                },
+                                                                "serviceProviderConfiguration": {
+                                                                    "connectionName": "sql-8",
+                                                                    "operationId": "executeStoredProcedure",
+                                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                                }
+                                                            }
+                                                        },
+                                                        "Is_insert_FEA_credit_distribution_succeeded": {
+                                                            "type": "If",
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "equals": [
+                                                                            "@body('Insert_FEA_credit_distribution')?['outputParameters']?['@O_iErrorState']",
+                                                                            "@0"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "actions": {
+                                                                "Insert_FEA_PM_transaction": {
+                                                                    "type": "ServiceProvider",
+                                                                    "inputs": {
+                                                                        "parameters": {
+                                                                            "storedProcedureName": "taPMTransactionInsert",
+                                                                            "storedProcedureParameters": {
+                                                                                "I_vBACHNUMB": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_batchid']}",
+                                                                                "I_vCHRGAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                                "I_vCREATEDIST": "0",
+                                                                                "I_vTRXDSCRN": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_destinationreason']}",
+                                                                                "I_vDOCDATE": "@{if(empty(body('Parse_mileage_message')?['contentData']?['document']?['pics_startdate']), '01-01-1900', formatDateTime(body('Parse_mileage_message')?['contentData']?['document']?['pics_startdate'], 'MM-dd-yyyy'))}",
+                                                                                "I_vDOCNUMBR": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_invoicenumber']}",
+                                                                                "I_vDOCTYPE": "@{1}",
+                                                                                "I_vPOSTEDDT": "@{formatDateTime(utcNow(), 'MM-dd-yyyy')}",
+                                                                                "I_vPRCHAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                                "I_vDOCAMNT": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_totalexpense']}",
+                                                                                "I_vVCHNUMWK": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                                "I_vVENDORID": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridfea']}"
+                                                                            },
+                                                                            "includeEmptyResultSets": false
+                                                                        },
+                                                                        "serviceProviderConfiguration": {
+                                                                            "connectionName": "sql-8",
+                                                                            "operationId": "executeStoredProcedure",
+                                                                            "serviceProviderId": "/serviceProviders/sql"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Is_insert_FEA_PM_transaction_succeeded": {
+                                                                    "type": "If",
+                                                                    "expression": {
+                                                                        "and": [
+                                                                            {
+                                                                                "equals": [
+                                                                                    "@body('Insert_FEA_PM_transaction')?['outputParameters']?['@O_iErrorState']",
+                                                                                    "@0"
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "actions": {
+                                                                        "Set_Is_Success_variable_to_true": {
+                                                                            "type": "SetVariable",
+                                                                            "inputs": {
+                                                                                "name": "IsSuccess",
+                                                                                "value": true
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "else": {
+                                                                        "actions": {
+                                                                            "Log_insert_FEA_PM_transaction_error": {
+                                                                                "type": "ServiceProvider",
+                                                                                "inputs": {
+                                                                                    "parameters": {
+                                                                                        "entityName": "integrationslog",
+                                                                                        "message": {
+                                                                                            "contentData": {
+                                                                                                "workflowId": "@{workflow().id}",
+                                                                                                "runId": "@{workflow().run.id}",
+                                                                                                "source": "dataverse",
+                                                                                                "sourceEntity": "new_mileageentry",
+                                                                                                "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageentryid']}",
+                                                                                                "target": "gppic",
+                                                                                                "targetEntity": "pmtransaction",
+                                                                                                "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}",
+                                                                                                "timestamp": "@{utcNow()}",
+                                                                                                "logLevel": "Error",
+                                                                                                "message": "@{replace(trim(body('Insert_FEA_PM_transaction')?['outputParameters']?['@oErrString']), ' ', ',')}"
+                                                                                            },
+                                                                                            "contentType": "@item()?['contentType']",
+                                                                                            "sessionId": "econnect",
+                                                                                            "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                                                        }
+                                                                                    },
+                                                                                    "serviceProviderConfiguration": {
+                                                                                        "connectionName": "serviceBus",
+                                                                                        "operationId": "sendMessage",
+                                                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "runAfter": {
+                                                                        "Insert_FEA_PM_transaction": [
+                                                                            "SUCCEEDED"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "else": {
+                                                                "actions": {
+                                                                    "Log_insert_FEA_credit_distribution_error": {
+                                                                        "type": "ServiceProvider",
+                                                                        "inputs": {
+                                                                            "parameters": {
+                                                                                "entityName": "integrationslog",
+                                                                                "message": {
+                                                                                    "contentData": {
+                                                                                        "workflowId": "@{workflow().id}",
+                                                                                        "runId": "@{workflow().run.id}",
+                                                                                        "source": "dataverse",
+                                                                                        "sourceEntity": "new_mileageentry",
+                                                                                        "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageentryid']}",
+                                                                                        "target": "gppic",
+                                                                                        "targetEntity": "pmdistribution",
+                                                                                        "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}|CREDIT",
+                                                                                        "timestamp": "@{utcNow()}",
+                                                                                        "logLevel": "Error",
+                                                                                        "message": "@{replace(trim(body('Insert_PICS_credit_distribution')?['outputParameters']?['@oErrString']), ' ', ',')}"
+                                                                                    },
+                                                                                    "contentType": "@item()?['contentType']",
+                                                                                    "sessionId": "econnect",
+                                                                                    "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                                                }
+                                                                            },
+                                                                            "serviceProviderConfiguration": {
+                                                                                "connectionName": "serviceBus",
+                                                                                "operationId": "sendMessage",
+                                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "Insert_FEA_credit_distribution": [
+                                                                    "SUCCEEDED"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "else": {
+                                                        "actions": {
+                                                            "Log_insert_FEA_debit_distribution_error": {
+                                                                "type": "ServiceProvider",
+                                                                "inputs": {
+                                                                    "parameters": {
+                                                                        "entityName": "integrationslog",
+                                                                        "message": {
+                                                                            "contentData": {
+                                                                                "workflowId": "@{workflow().id}",
+                                                                                "runId": "@{workflow().run.id}",
+                                                                                "source": "dataverse",
+                                                                                "sourceEntity": "new_mileageentry",
+                                                                                "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageentryid']}",
+                                                                                "target": "gpfea",
+                                                                                "targetEntity": "pmdistribution",
+                                                                                "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['pics_vouchernumber']}|DEBIT",
+                                                                                "timestamp": "@{utcNow()}",
+                                                                                "logLevel": "Error",
+                                                                                "message": "@{replace(trim(body('Insert_FEA_debit_distribution')?['outputParameters']?['@oErrString']), ' ', ',')}"
+                                                                            },
+                                                                            "contentType": "@item()?['contentType']",
+                                                                            "sessionId": "econnect",
+                                                                            "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                                        }
+                                                                    },
+                                                                    "serviceProviderConfiguration": {
+                                                                        "connectionName": "serviceBus",
+                                                                        "operationId": "sendMessage",
+                                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Insert_FEA_debit_distribution": [
+                                                            "SUCCEEDED"
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Check_for_existing_FEA_PM_transaction": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Log_GP_FEA_vendor_not_found_error": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "entityName": "integrationslog",
+                                                    "message": {
+                                                        "contentData": {
+                                                            "workflowId": "@{workflow().id}",
+                                                            "runId": "@{workflow().run.id}",
+                                                            "source": "dataverse",
+                                                            "sourceEntity": "new_mileageentry",
+                                                            "sourceId": "@{body('Parse_mileage_message')?['contentData']?['document']?['new_mileageentryid']}",
+                                                            "target": "gpfea",
+                                                            "targetEntity": "vendor",
+                                                            "targetId": "@{body('Parse_mileage_message')?['contentData']?['document']?['contact.pics_vendoridfea']}",
+                                                            "timestamp": "@{utcNow()}",
+                                                            "logLevel": "Error",
+                                                            "message": "Unable to find vendor in GP FEA. "
+                                                        },
+                                                        "contentType": "@item()?['contentType']",
+                                                        "sessionId": "dataverse",
+                                                        "correlationId": "@body('Parse_mileage_message')?['correlationId']"
+                                                    }
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "serviceBus",
+                                                    "operationId": "sendMessage",
+                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Check_for_existing_vendor_in_GP_FEA": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Is_PICS_mileage": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Reset_IsSuccess_variable": {
+                        "type": "SetVariable",
+                        "inputs": {
+                            "name": "IsSuccess",
+                            "value": false
+                        },
+                        "runAfter": {
+                            "Parse_mileage_message": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Is_mileage_transaction_succeeded": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@variables('IsSuccess')",
+                                        "@true"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Set_mileage_status_to_success_in_CRM": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "new_gpstatus": 100000001,
+                                        "statuscode": 456010004
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_mileage_message')?['contentData']?['document']?['new_mileageentryid']))})"
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Set_mileage_status_to_failed_in_CRM": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "patch",
+                                        "body": {
+                                            "pics_errormessage": "Error creating mileage transaction in GP. See error log for details",
+                                            "new_gpstatus": 100000002,
+                                            "statuscode": 456010002
+                                        },
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_mileage_message')?['contentData']?['document']?['new_mileageentryid']))})"
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Is_FEA_mileage": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Complete_the_message_in_a_session": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "messageId": "@body('Parse_mileage_message')?['messageId']",
+                                "lockToken": "@body('Parse_mileage_message')?['lockToken']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "serviceBus",
+                                "operationId": "completeMessageInSession",
+                                "serviceProviderId": "/serviceProviders/serviceBus"
+                            }
+                        },
+                        "runAfter": {
+                            "Is_mileage_transaction_succeeded": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Initialize_IsSuccess_variable": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "repetitions": 1
+                    }
+                }
+            },
+            "Initialize_IsSuccess_variable": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "IsSuccess",
+                            "type": "boolean",
+                            "value": false
+                        }
+                    ]
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Get_new_messages_from_mileage_queue": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "gpintegrations",
+                        "sessionId": "mileage",
+                        "maxMessages": 100
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus-2",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 2,
+                    "frequency": "Minute"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 1
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

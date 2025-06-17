@@ -1,0 +1,8 @@
+{
+  "sourceAttributesMonitored": [
+    "pics_TotalAmount",
+    "pics_Fee",
+    "statecode",
+    "new_budgetlineid"
+  ]
+}

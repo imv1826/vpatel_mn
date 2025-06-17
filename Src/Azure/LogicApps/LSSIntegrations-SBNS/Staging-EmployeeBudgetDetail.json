@@ -1,0 +1,281 @@
+{
+  "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "actions": {
+          "Select_sorted_props": {
+              "type": "Select",
+              "inputs": {
+                  "from": "@triggerBody()",
+                  "select": {
+                      "sortKey": "@concat(item()?['correlationId'], '-', item()?['contentData']?['messageName'], '-', item()?['contentData']?['initiatedOn'], '-', item()?['contentData']?['document']?['pics_employeebudgetdetailid'])",
+                      "originalItem": "@item()",
+                      "messageId": "@item()?['messageId']",
+                      "lockToken": "@item()?['lockToken']"
+                  }
+              },
+              "runAfter": {}
+          },
+          "Order_the_messages": {
+              "type": "Compose",
+              "inputs": "@sort(body('Select_sorted_props'), 'sortKey')",
+              "runAfter": {
+                  "Select_sorted_props": [
+                      "SUCCEEDED"
+                  ]
+              }
+          },
+          "For_Each_Message": {
+              "type": "foreach",
+              "foreach": "@outputs('Order_the_messages')",
+              "actions": {
+                  "Parse_JSON": {
+                      "type": "ParseJson",
+                      "inputs": {
+                          "content": "@item()?['originalItem']",
+                          "schema": {
+                              "type": "object",
+                              "properties": {
+                                  "contentData": {
+                                      "type": "object",
+                                      "properties": {
+                                          "initiatedOn": {
+                                              "type": "integer"
+                                          },
+                                          "messageName": {
+                                              "type": "string"
+                                          },
+                                          "logLevel": {
+                                              "type": "string"
+                                          },
+                                          "document": {
+                                              "type": "object",
+                                              "properties": {}
+                                          }
+                                      },
+                                      "required": [
+                                          "initiatedOn",
+                                          "messageName",
+                                          "logLevel",
+                                          "document"
+                                      ]
+                                  },
+                                  "contentType": {
+                                      "type": "string"
+                                  },
+                                  "messageId": {
+                                      "type": "string"
+                                  },
+                                  "scheduledEnqueueTimeUtc": {
+                                      "type": "string"
+                                  },
+                                  "sessionId": {
+                                      "type": "string"
+                                  },
+                                  "correlationId": {
+                                      "type": "string"
+                                  },
+                                  "timeToLive": {
+                                      "type": "string"
+                                  },
+                                  "deliveryCount": {
+                                      "type": "integer"
+                                  },
+                                  "enqueuedSequenceNumber": {
+                                      "type": "integer"
+                                  },
+                                  "enqueuedTimeUtc": {
+                                      "type": "string"
+                                  },
+                                  "lockedUntilUtc": {
+                                      "type": "string"
+                                  },
+                                  "sequenceNumber": {
+                                      "type": "integer"
+                                  },
+                                  "userProperties": {
+                                      "type": "object",
+                                      "properties": {
+                                          "request-Id": {
+                                              "type": "string"
+                                          }
+                                      }
+                                  },
+                                  "lockToken": {
+                                      "type": "string"
+                                  }
+                              },
+                              "required": [
+                                  "contentData",
+                                  "messageId",
+                                  "sessionId",
+                                  "correlationId",
+                                  "deliveryCount",
+                                  "sequenceNumber"
+                              ]
+                          }
+                      }
+                  },
+                  "Event_messageName": {
+                      "type": "Switch",
+                      "expression": "@body('Parse_JSON')?['contentData']?['messageName']",
+                      "default": {
+                          "actions": {}
+                      },
+                      "cases": {
+                          "Create": {
+                              "actions": {
+                                  "Insert_row": {
+                                      "type": "ServiceProvider",
+                                      "inputs": {
+                                          "parameters": {
+                                              "tableName": "[stg].[pics_employeebudgetdetail]",
+                                              "setColumns": "@outputs('Build_the_Action_Content_Body')?['body']"
+                                          },
+                                          "serviceProviderConfiguration": {
+                                              "connectionName": "sql-6",
+                                              "operationId": "insertRow",
+                                              "serviceProviderId": "/serviceProviders/sql"
+                                          }
+                                      }
+                                  }
+                              },
+                              "case": "Create"
+                          },
+                          "Update": {
+                              "actions": {
+                                  "Condition": {
+                                      "type": "If",
+                                      "expression": {
+                                          "and": [
+                                              {
+                                                  "equals": [
+                                                      "@outputs('Build_the_Action_Content_Body')?['hasUpdates']",
+                                                      "@true"
+                                                  ]
+                                              }
+                                          ]
+                                      },
+                                      "actions": {
+                                          "Update_rows": {
+                                              "type": "ServiceProvider",
+                                              "inputs": {
+                                                  "parameters": {
+                                                      "tableName": "[stg].[pics_employeebudgetdetail]",
+                                                      "setColumns": "@outputs('Build_the_Action_Content_Body')?['body']",
+                                                      "columnValuesForWhereCondition": {
+                                                          "pics_employeebudgetdetailid": "@{body('Parse_JSON')['contentData']['document']?['pics_employeebudgetdetailid']}"
+                                                      }
+                                                  },
+                                                  "serviceProviderConfiguration": {
+                                                      "connectionName": "sql-6",
+                                                      "operationId": "updateRows",
+                                                      "serviceProviderId": "/serviceProviders/sql"
+                                                  }
+                                              }
+                                          }
+                                      },
+                                      "else": {
+                                          "actions": {}
+                                      }
+                                  }
+                              },
+                              "case": "Update"
+                          },
+                          "Delete": {
+                              "actions": {
+                                  "Delete_rows": {
+                                      "type": "ServiceProvider",
+                                      "inputs": {
+                                          "parameters": {
+                                              "tableName": "[stg].[pics_employeebudgetdetail]",
+                                              "columnValuesForWhereCondition": "@outputs('Build_the_Action_Content_Body')?['body']"
+                                          },
+                                          "serviceProviderConfiguration": {
+                                              "connectionName": "sql-6",
+                                              "operationId": "deleteRows",
+                                              "serviceProviderId": "/serviceProviders/sql"
+                                          }
+                                      }
+                                  }
+                              },
+                              "case": "Delete"
+                          }
+                      },
+                      "runAfter": {
+                          "Build_the_Action_Content_Body": [
+                              "SUCCEEDED"
+                          ]
+                      }
+                  },
+                  "Build_the_Action_Content_Body": {
+                      "type": "JavaScriptCode",
+                      "inputs": {
+                          "code": "const body = workflowContext.actions.Parse_JSON.outputs.body;\nif (!body) throw new Error(\"No body found in the Parse_JSON action\");\n\nconst source = body.contentData.document;\nif (!source) throw new Error(\"No document found in the body\");\n\nconst messageName = body.contentData.messageName;\n\nconst primaryIdAttr = \"pics_employeebudgetdetailid\";\n\nif (messageName === \"Delete\") {\n  return {\n    hasUpdates: true,\n    body: {\n      [primaryIdAttr]: source[primaryIdAttr]\n    }\n  };\n}\n\nconst tableColumns = [\n  \"Modifiedon\",\n  \"pics_DescriptionSubxCode\",\n  \"pics_EmployeeIdName\",\n  \"pics_SABudgetDetailId\",\n  \"pics_SABudgetDetailIdName\",\n  \"pics_SANumberId\",\n  \"pics_SANumberIdName\",\n  \"pics_StaffingType\",\n  \"pics_StaffingTypeName\",\n  \"pics_SubxCodeIdName\"\n].map(n => n.toLowerCase());\n\nfunction isValueString(value) {\n  return typeof value === \"string\" || value instanceof String;\n}\n\nfunction isValueBoolean(value) {\n  return typeof value === \"boolean\" || value instanceof Boolean;\n}\n\nfunction isStringDate(dateString) {\n  return !isNaN(Date.parse(dateString));\n}\n\nfunction formatDateStringToSql(dateString) {\n  return dateString.replace(\"Z\", \"\").replace(/\\.\\d+/, \"\").replace(/T/, \" \");\n}\n\nfunction parseValueSQLString(value) {\n  if (isValueString(value)) {\n    if (value.includes(\"'\")) {\n      value = value.replace(/'/g, \"''\");\n    }\n\n    if (isStringDate(value)) {\n      value = formatDateStringToSql(value);\n    }\n\n    return value === null || value === undefined ? \"null\" : value.toString();\n  }\n\n  if (isValueBoolean(value)) {\n    return value ? \"1\" : \"0\";\n  }\n\n  return value === null || value === undefined ? \"null\" : value.toString();\n}\n\n// Only include primary ID in the body object if the message is not \"Update\"\nif (messageName !== \"Update\") tableColumns.push(primaryIdAttr);\n\nconst sourceKeys = Object.keys(source);\n\nconst result = sourceKeys.reduce((acc, colName) => {\n  if (!tableColumns.includes(colName)) return acc;\n\n  acc[colName] = parseValueSQLString(source[colName]);\n  return acc;\n}, {});\n\nreturn {\n  body: result,\n  hasUpdates: messageName !== \"Update\" || Object.keys(result).length > 0\n};"
+                      },
+                      "runAfter": {
+                          "Parse_JSON": [
+                              "SUCCEEDED"
+                          ]
+                      }
+                  },
+                  "Complete_the_message_in_a_session": {
+                      "type": "ServiceProvider",
+                      "inputs": {
+                          "parameters": {
+                              "messageId": "@items('For_Each_Message')?['messageId']",
+                              "lockToken": "@items('For_Each_Message')?['lockToken']"
+                          },
+                          "serviceProviderConfiguration": {
+                              "connectionName": "serviceBus",
+                              "operationId": "completeMessageInSession",
+                              "serviceProviderId": "/serviceProviders/serviceBus"
+                          }
+                      },
+                      "runAfter": {
+                          "Event_messageName": [
+                              "SUCCEEDED"
+                          ]
+                      }
+                  }
+              },
+              "runAfter": {
+                  "Order_the_messages": [
+                      "SUCCEEDED"
+                  ]
+              }
+          }
+      },
+      "contentVersion": "1.0.0.0",
+      "outputs": {},
+      "triggers": {
+          "On_new_messages_from_EmployeeBudgetDetail_staging_queue_session": {
+              "type": "ServiceProvider",
+              "kind": "Polling",
+              "inputs": {
+                  "parameters": {
+                      "queueName": "staging-dataverse-entity",
+                      "sessionId": "pics_employeebudgetdetail",
+                      "maxMessages": 10
+                  },
+                  "serviceProviderConfiguration": {
+                      "connectionName": "serviceBus",
+                      "operationId": "onNewMessagesFromQueueSession",
+                      "serviceProviderId": "/serviceProviders/serviceBus"
+                  }
+              },
+              "recurrence": {
+                  "interval": 5,
+                  "frequency": "Second",
+                  "timeZone": "Mountain Standard Time",
+                  "startTime": "2025-3-19T11:00:00"
+              },
+              "runtimeConfiguration": {
+                  "concurrency": {
+                      "runs": 1
+                  }
+              }
+          }
+      }
+  },
+  "kind": "Stateful"
+}

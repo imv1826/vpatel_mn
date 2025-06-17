@@ -1,0 +1,303 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each": {
+                "type": "foreach",
+                "foreach": "@first(body('List_rows')?['value'])",
+                "actions": {
+                    "Update_a_fee": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statecode": 1
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['pics_feeId']))})"
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_new_fee_": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "pics_amount": "@mul(body('Parse_JSON')?['pics_Amount'], -1)",
+                                "pics_dateofservice": "@body('Parse_JSON')?['pics_DateofService']",
+                                "pics_name": "@body('Parse_JSON')?['pics_name']",
+                                "pics_hidessreport": "@if(equals(body('Parse_JSON')?['pics_HideSSReport'], 1), true, false)",
+                                "pics_hold": false,
+                                "pics_sadetailid@odata.bind": "/new_serviceagreementdetails(@{body('Parse_JSON')?['pics_SADetailId']})",
+                                "statecode": 1
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}"
+                        },
+                        "runAfter": {
+                            "Update_a_fee-copy": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Parse_JSON": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "claimid": {
+                                        "type": "string"
+                                    },
+                                    "pics_Amount": {
+                                        "type": "integer"
+                                    },
+                                    "pics_DateofService": {
+                                        "type": "string"
+                                    },
+                                    "pics_feeId": {
+                                        "type": "string"
+                                    },
+                                    "pics_HideSSReport": {
+                                        "type": "integer"
+                                    },
+                                    "pics_name": {
+                                        "type": "string"
+                                    },
+                                    "pics_SADetailId": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Update_a_fee-copy": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statuscode": 456010001
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['pics_feeId']))})"
+                        },
+                        "runAfter": {
+                            "Update_salesorder": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_salesorder": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statuscode": 456010013,
+                                "statecode": 0
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(body('Parse_JSON')?['claimid'])})"
+                        },
+                        "runAfter": {
+                            "Update_a_fee": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_a_row": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statecode": 1
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}(@{encodeURIComponent(encodeURIComponent(body('Add_a_new_fee_')?['pics_feeid']))})"
+                        },
+                        "runAfter": {
+                            "Add_a_new_fee_": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_a_row-copy": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statuscode": 456010001
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}(@{encodeURIComponent(encodeURIComponent(body('Add_a_new_fee_')?['pics_feeid']))})"
+                        },
+                        "runAfter": {
+                            "Add_a_new_fee_2": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_new_fee_2": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "pics_amount": "@body('Parse_JSON')?['pics_Amount']",
+                                "pics_dateofservice": "@body('Parse_JSON')?['pics_DateofService']",
+                                "pics_name": "@body('Parse_JSON')?['pics_name']",
+                                "pics_hidessreport": "@if(equals(body('Parse_JSON')?['pics_HideSSReport'], 1), true, false)",
+                                "pics_hold": false,
+                                "pics_sadetailid@odata.bind": "/new_serviceagreementdetails(@{body('Parse_JSON')?['pics_SADetailId']})"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}"
+                        },
+                        "runAfter": {
+                            "Update_a_row": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Condition": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "repetitions": 4
+                    }
+                }
+            },
+            "Condition": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('List_rows')?['value'])",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Terminate": {
+                        "type": "Terminate",
+                        "inputs": {
+                            "runStatus": "Succeeded"
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "List_rows": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "List_rows": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "commondataservice-1"
+                        }
+                    },
+                    "method": "get",
+                    "headers": {
+                        "prefer": "odata.include-annotations=*",
+                        "accept": "application/json;odata.metadata=full",
+                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                    },
+                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}",
+                    "queries": {
+                        "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"true\">\n<entity name=\"pics_fee\">\n<attribute name=\"pics_name\"/>\n<attribute name=\"createdon\"/>\n<attribute name=\"pics_dateofservice\"/>\n<attribute name=\"pics_amount\"/>\n<attribute name=\"pics_sadetailid\"/>\n<attribute name=\"pics_feeid\"/>\n<order attribute=\"pics_name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"statecode\" operator=\"eq\" value=\"456010000\"/>\n</filter>\n\n<link-entity name=\"salesorderdetail\" from=\"pics_feeid\" to=\"pics_feeid\" link-type=\"inner\" alias=\"ac\">\n<attribute name=\"salesorderid\"/>\n</link-entity>\n\n</entity>\n</fetch>"
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "Central America Standard Time"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

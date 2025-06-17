@@ -1,0 +1,634 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each_fein_holder_message": {
+                "type": "Foreach",
+                "foreach": "@triggerBody()",
+                "actions": {
+                    "Parse_fein_holder_message": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each_fein_holder_message')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "contentData": {
+                                        "type": "object",
+                                        "properties": {
+                                            "messageId": {
+                                                "type": "string"
+                                            },
+                                            "initiatedOn": {
+                                                "type": "integer"
+                                            },
+                                            "messageName": {
+                                                "type": "string"
+                                            },
+                                            "logLevel": {
+                                                "type": "string"
+                                            },
+                                            "document": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "address1_city": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line1": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line2": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line3": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_postalcode": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_county": {
+                                                        "type": "string"
+                                                    },
+                                                    "birthdate": {
+                                                        "type": "string"
+                                                    },
+                                                    "birthdate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "contactid": {
+                                                        "type": "string"
+                                                    },
+                                                    "firstname": {
+                                                        "type": "string"
+                                                    },
+                                                    "middlename": {
+                                                        "type": "string"
+                                                    },
+                                                    "lastname": {
+                                                        "type": "string"
+                                                    },
+                                                    "telephone1": {
+                                                        "type": "string"
+                                                    },
+                                                    "telephone2": {
+                                                        "type": "string"
+                                                    },
+                                                    "telephone3": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_dateofhire": {
+                                                        "type": "string"
+                                                    },
+                                                    "modifiedby": {
+                                                        "type": "string"
+                                                    },
+                                                    "modifiedon": {
+                                                        "type": "string"
+                                                    },
+                                                    "modifiedonbehalfby": {},
+                                                    "new_fein": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_stateorprovince": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_address1state": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pics_address1state_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_feinholder": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "pics_feinholder_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_feinholderid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_feinholderstateeinnumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_ssn": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_staterevenuetaxid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_statesutaemployernumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "suffix": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "contentType": {
+                                        "type": "string"
+                                    },
+                                    "userProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "request-Id": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "messageId": {
+                                        "type": "string"
+                                    },
+                                    "scheduledEnqueueTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "sessionId": {
+                                        "type": "string"
+                                    },
+                                    "correlationId": {
+                                        "type": "string"
+                                    },
+                                    "timeToLive": {
+                                        "type": "string"
+                                    },
+                                    "deliveryCount": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedSequenceNumber": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockedUntilUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockToken": {
+                                        "type": "string"
+                                    },
+                                    "sequenceNumber": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Check_for_existing_employee_in_GP": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "tableName": "[dbo].[UPR00100]",
+                                "columnValuesForWhereCondition": {
+                                    "EMPLOYID": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}"
+                                }
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "sql-8",
+                                "operationId": "getRows",
+                                "serviceProviderId": "/serviceProviders/sql"
+                            }
+                        },
+                        "runAfter": {
+                            "Parse_fein_holder_message": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Is_existing_employee_found": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "greater": [
+                                        "@length(body('Check_for_existing_employee_in_GP'))",
+                                        "@0"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Update_existing_employee_in_GP": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "storedProcedureName": "taCreateEmployee",
+                                        "storedProcedureParameters": {
+                                            "I_vACTNUMST": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderstateeinnumber']}",
+                                            "I_vEMPLOYID": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                            "I_vADDRESS1": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line1']}",
+                                            "I_vADDRESS2": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line2']}",
+                                            "I_vADDRESS3": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line3']}",
+                                            "I_vBRTHDATE": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['birthdate']), '01-01-1900', formatDateTime(body('Parse_fein_holder_message')?['contentData']?['document']?['birthdate'], 'MM-dd-yyyy'))}",
+                                            "I_vCITY": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_city']}",
+                                            "I_vCOUNTY": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_county']}",
+                                            "I_vFRSTNAME": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['firstname']}",
+                                            "I_vSTRTDATE": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['new_dateofhire']), '01-01-1900', formatDateTime(body('Parse_fein_holder_message')?['contentData']?['document']?['new_dateofhire'], 'MM-dd-yyyy'))}",
+                                            "I_vLASTNAME": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['lastname']}",
+                                            "I_vPHONE1": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vPHONE2": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vPHONE3": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vSOCSCNUM": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['pics_ssn']), null, replace(body('Parse_fein_holder_message')?['contentData']?['document']?['pics_ssn'], '-', ''))}",
+                                            "I_vSTATE": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                            "I_vZIPCODE": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_postalcode']}",
+                                            "I_vDEPRTMNT": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                            "I_vJOBTITLE": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                            "I_vEMPLCLAS": "FEIN HOLDER",
+                                            "I_vADRSCODE": "PRIMARY"
+                                        },
+                                        "includeEmptyResultSets": false
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-8",
+                                        "operationId": "executeStoredProcedure",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Is_update_existing_employee_succeeded": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@body('Update_existing_employee_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Update_existing_employee_address_in_GP": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "storedProcedureName": "taCreateEmployeeAddress",
+                                                "storedProcedureParameters": {
+                                                    "I_vEMPLOYID": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                                    "I_vADDRESS1": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line1']}",
+                                                    "I_vADDRESS2": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line2']}",
+                                                    "I_vADDRESS3": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line3']}",
+                                                    "I_vADRSCODE": "PRIMARY",
+                                                    "I_vCITY": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_city']}",
+                                                    "I_vCOUNTY": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_county']}",
+                                                    "I_vPHONE1": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vPHONE2": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vPHONE3": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vZIPCODE": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_postalcode']}",
+                                                    "I_vSTATE": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_stateorprovince']}",
+                                                    "I_vDEPRTMNT": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}"
+                                                },
+                                                "includeEmptyResultSets": false
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-8",
+                                                "operationId": "executeStoredProcedure",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        }
+                                    },
+                                    "Is_update_existing_employee_address_succeeded": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@body('Update_existing_employee_address_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                        "@0"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {},
+                                        "else": {
+                                            "actions": {
+                                                "Log_update_existing_employee_address_error": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "entityName": "integrationslog",
+                                                            "message": {
+                                                                "contentData": {
+                                                                    "source": "dataverse",
+                                                                    "sourceEntity": "contact",
+                                                                    "sourceId": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['contactid']}",
+                                                                    "target": "gpfea",
+                                                                    "targetEntity": "employeeaddress",
+                                                                    "targetId": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}|PRIMARY",
+                                                                    "timestamp": "@{utcNow()}",
+                                                                    "logLevel": "Error",
+                                                                    "message": "@{replace(trim(body('Update_existing_employee_address_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                },
+                                                                "contentType": "@item()?['contentType']",
+                                                                "sessionId": "econnect",
+                                                                "correlationId": "@body('Parse_fein_holder_message')?['correlationId']"
+                                                            }
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "serviceBus",
+                                                            "operationId": "sendMessage",
+                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Update_existing_employee_address_in_GP": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Log_update_existing_employee_error": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "entityName": "integrationslog",
+                                                    "message": {
+                                                        "contentData": {
+                                                            "source": "dataverse",
+                                                            "sourceEntity": "contact",
+                                                            "sourceId": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['contactid']}",
+                                                            "target": "gpfea",
+                                                            "targetEntity": "employee",
+                                                            "targetId": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                                            "timestamp": "@{utcNow()}",
+                                                            "logLevel": "Error",
+                                                            "message": "@{replace(trim(body('Update_existing_employee_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                        },
+                                                        "contentType": "@item()?['contentType']",
+                                                        "sessionId": "econnect",
+                                                        "correlationId": "@body('Parse_fein_holder_message')?['correlationId']"
+                                                    }
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "serviceBus",
+                                                    "operationId": "sendMessage",
+                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Update_existing_employee_in_GP": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Get_next_employee_number_from_GP": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "query": "select max(employid)+1 as nextEmployeeNumber from upr00100 where LEFT(employid,1) = '3'"
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "sql-8",
+                                            "operationId": "executeQuery",
+                                            "serviceProviderId": "/serviceProviders/sql"
+                                        }
+                                    }
+                                },
+                                "Upsert_position_record_in_GP": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "query": "MERGE INTO UPR40301\nUSING (VALUES('@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '-', '@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_staterevenuetaxid']}')) AS src (JOBTITLE, TXTFIELD, DSCRIPTN)\nON UPR40301.JOBTITLE = src.JOBTITLE\nWHEN MATCHED THEN \nUPDATE SET TXTFIELD = src.TXTFIELD, DSCRIPTN = src.DSCRIPTN\nWHEN NOT MATCHED THEN INSERT (JOBTITLE, TXTFIELD, DSCRIPTN)\nVALUES('@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '-', '@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_staterevenuetaxid']}');"
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "sql-8",
+                                            "operationId": "executeQuery",
+                                            "serviceProviderId": "/serviceProviders/sql"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Upsert_department_record_in_GP": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Upsert_department_record_in_GP": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "query": "MERGE INTO UPR40300\nUSING (VALUES('@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '@{body('Parse_fein_holder_message')?['contentData']?['document']?['new_fein']}')) AS src (DEPRTMNT, DSCRIPTN)\nON UPR40300.DEPRTMNT = src.DEPRTMNT\nWHEN MATCHED THEN \nUPDATE SET DSCRIPTN = src.DSCRIPTN\nWHEN NOT MATCHED THEN INSERT (DEPRTMNT, DSCRIPTN)\nVALUES('@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '@{body('Parse_fein_holder_message')?['contentData']?['document']?['new_fein']}');"
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "sql-8",
+                                            "operationId": "executeQuery",
+                                            "serviceProviderId": "/serviceProviders/sql"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Get_next_employee_number_from_GP": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Upsert_supervisor_record_in_GP": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "query": "MERGE INTO UPR41700\nUSING (VALUES('@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_statesutaemployernumber']}')) AS src (SUPERVISORCODE_I, EMPLOYID, SUPERVISOR)\nON UPR41700.SUPERVISORCODE_I = src.SUPERVISORCODE_I\nWHEN NOT MATCHED THEN INSERT (SUPERVISORCODE_I, EMPLOYID, SUPERVISOR)\nVALUES('@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '@{body('Get_next_employee_number_from_GP')?[0]?[0]?['nextEmployeeNumber']}', '@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_statesutaemployernumber']}');"
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "sql-8",
+                                            "operationId": "executeQuery",
+                                            "serviceProviderId": "/serviceProviders/sql"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Upsert_position_record_in_GP": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Insert_new_employee_in_GP": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "storedProcedureName": "taCreateEmployee",
+                                            "storedProcedureParameters": {
+                                                "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                "I_vADDRESS1": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line1']}",
+                                                "I_vADDRESS2": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line2']}",
+                                                "I_vADDRESS3": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_line3']}",
+                                                "I_vADRSCODE": "PRIMARY",
+                                                "I_vBRTHDATE": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['birthdate']), '01-01-1900', formatDateTime(body('Parse_fein_holder_message')?['contentData']?['document']?['birthdate'], 'MM-dd-yyyy'))}",
+                                                "I_vCITY": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_city']}",
+                                                "I_vEMPLCLAS": "FEIN HOLDER",
+                                                "I_vCOUNTY": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_county']}",
+                                                "I_vDEPRTMNT": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                "I_vEMPLSUFF": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['suffix']}",
+                                                "I_vFRSTNAME": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['firstname']}",
+                                                "I_vSTRTDATE": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['new_dateofhire']), '01-01-1900', formatDateTime(body('Parse_fein_holder_message')?['contentData']?['document']?['new_dateofhire'], 'MM-dd-yyyy'))}",
+                                                "I_vLASTNAME": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['lastname']}",
+                                                "I_vPHONE1": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                                "I_vPHONE2": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                                "I_vPHONE3": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_fein_holder_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                                "I_vJOBTITLE": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                "I_vSOCSCNUM": "@{if(empty(body('Parse_fein_holder_message')?['contentData']?['document']?['pics_ssn']), null, replace(body('Parse_fein_holder_message')?['contentData']?['document']?['pics_ssn'], '-', ''))}",
+                                                "I_vSTATE": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                                "I_vSUPERVISORCODE_I": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                "I_vWorkflow_Approval_Status": 9,
+                                                "I_vWorkflow_Priority": 0,
+                                                "I_vZIPCODE": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['address1_postalcode']}"
+                                            },
+                                            "includeEmptyResultSets": false
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "sql-8",
+                                            "operationId": "executeStoredProcedure",
+                                            "serviceProviderId": "/serviceProviders/sql"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Upsert_supervisor_record_in_GP": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Is_insert_new_employee_succeeded": {
+                                    "type": "If",
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@body('Insert_new_employee_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                    "@0"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "actions": {
+                                        "Update_contact_with_new_FEIN_Id_in_CRM": {
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "referenceName": "commondataservice-1"
+                                                    }
+                                                },
+                                                "method": "patch",
+                                                "body": {
+                                                    "pics_feinholderid": "@string(body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber'])"
+                                                },
+                                                "headers": {
+                                                    "prefer": "return=representation,odata.include-annotations=*",
+                                                    "accept": "application/json;odata.metadata=full",
+                                                    "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                },
+                                                "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('contacts'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_fein_holder_message')?['contentData']?['document']?['contactid']))})"
+                                            }
+                                        }
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Log_insert_new_employee_error": {
+                                                "type": "ServiceProvider",
+                                                "inputs": {
+                                                    "parameters": {
+                                                        "entityName": "integrationslog",
+                                                        "message": {
+                                                            "contentData": {
+                                                                "source": "dataverse",
+                                                                "sourceEntity": "contact",
+                                                                "sourceId": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['contactid']}",
+                                                                "target": "gpfea",
+                                                                "targetEntity": "employee",
+                                                                "targetId": "@{body('Parse_fein_holder_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                                                "timestamp": "@{utcNow()}",
+                                                                "logLevel": "Error",
+                                                                "message": "@{replace(trim(body('Insert_new_employee_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                            },
+                                                            "contentType": "@item()?['contentType']",
+                                                            "sessionId": "econnect",
+                                                            "correlationId": "@body('Parse_fein_holder_message')?['correlationId']"
+                                                        }
+                                                    },
+                                                    "serviceProviderConfiguration": {
+                                                        "connectionName": "serviceBus",
+                                                        "operationId": "sendMessage",
+                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Insert_new_employee_in_GP": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Check_for_existing_employee_in_GP": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Complete_fein_holder_message": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "messageId": "@item()?['messageId']",
+                                "lockToken": "@item()?['lockToken']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "serviceBus",
+                                "operationId": "completeMessageInSession",
+                                "serviceProviderId": "/serviceProviders/serviceBus"
+                            }
+                        },
+                        "runAfter": {
+                            "Is_existing_employee_found": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Get_new_messages_from_fein_holder_queue": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "gpintegrations",
+                        "sessionId": "feinholder",
+                        "maxMessages": 100
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus-2",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 5,
+                    "frequency": "Second",
+                    "timeZone": "Mountain Standard Time",
+                    "startTime": "2025-04-28T14:13:01"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 1
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

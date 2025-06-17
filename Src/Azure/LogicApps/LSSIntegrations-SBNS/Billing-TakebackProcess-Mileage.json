@@ -1,0 +1,341 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Execute_query": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "exec dbo.pLSS_TakeBackMileage;"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {}
+            },
+            "For_each": {
+                "type": "foreach",
+                "foreach": "@first(body('Execute_query'))",
+                "actions": {
+                    "Parse_JSON": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "RecordType": {
+                                        "type": "string"
+                                    },
+                                    "claimid": {
+                                        "type": "string"
+                                    },
+                                    "new_mileageentryId": {
+                                        "type": "string"
+                                    },
+                                    "new_ExtendedMileageCost": {
+                                        "type": "integer"
+                                    },
+                                    "TransactionCurrencyId": {
+                                        "type": "string"
+                                    },
+                                    "new_Miles": {
+                                        "type": "number"
+                                    },
+                                    "new_Parking": {
+                                        "type": "integer"
+                                    },
+                                    "new_ReadyToProcess": {
+                                        "type": "integer"
+                                    },
+                                    "new_RejectReason": {},
+                                    "new_TotalExpense": {
+                                        "type": "integer"
+                                    },
+                                    "new_totalexpense_Base": {
+                                        "type": "integer"
+                                    },
+                                    "pics_BatchID": {
+                                        "type": "string"
+                                    },
+                                    "pics_CreatedByPortalUser": {
+                                        "type": "string"
+                                    },
+                                    "pics_DateSubmitted": {
+                                        "type": "string"
+                                    },
+                                    "pics_DestinationReason": {
+                                        "type": "string"
+                                    },
+                                    "pics_EndDate": {
+                                        "type": "string"
+                                    },
+                                    "pics_InvoiceNumber": {
+                                        "type": "string"
+                                    },
+                                    "pics_ModifiedByPortalUser": {
+                                        "type": "string"
+                                    },
+                                    "pics_Origination": {
+                                        "type": "integer"
+                                    },
+                                    "pics_PortalStatus": {
+                                        "type": "integer"
+                                    },
+                                    "pics_StartDate": {
+                                        "type": "string"
+                                    },
+                                    "pics_VoucherNumber": {
+                                        "type": "string"
+                                    },
+                                    "new_clientid": {
+                                        "type": "string"
+                                    },
+                                    "new_paytoid": {
+                                        "type": "string"
+                                    },
+                                    "new_budgetlineid": {
+                                        "type": "string"
+                                    },
+                                    "pics_ServiceAgreementId": {
+                                        "type": "string"
+                                    },
+                                    "pics_Fee": {
+                                        "type": "integer"
+                                    },
+                                    "pics_OriginalVoucherNumber": {},
+                                    "pics_HideSSReport": {
+                                        "type": "integer"
+                                    },
+                                    "new_name": {
+                                        "type": "string"
+                                    },
+                                    "statecode": {
+                                        "type": "integer"
+                                    },
+                                    "new_Rate": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Update_mileageentry": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statecode": 1
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com/"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}(@{encodeURIComponent(body('Parse_JSON')?['new_mileageentryId'])})"
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_mileageentry-copy": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statuscode": 456010007
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com/"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}(@{encodeURIComponent(body('Parse_JSON')?['new_mileageentryId'])})"
+                        },
+                        "runAfter": {
+                            "Add_a_new_mileageentry_2": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Get_a_row_by_ID": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com/"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['claimid']))})",
+                            "queries": {
+                                "$select": "statuscode"
+                            }
+                        },
+                        "runAfter": {
+                            "Update_mileageentry": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_salesorder": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statuscode": "@if(and(or(equals(trim(body('Parse_JSON')?['RecordType']), 'Original'),equals(trim(body('Parse_JSON')?['RecordType']), 'OriginalFee')),equals(body('Get_a_row_by_ID')?['statuscode'], 0)), 456010013, body('Get_a_row_by_ID')?['statuscode'])"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com/"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(body('Parse_JSON')?['claimid'])})"
+                        },
+                        "runAfter": {
+                            "Get_a_row_by_ID": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_new_mileageentry": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "new_budgetlineid@odata.bind": "/new_serviceagreementdetails(@{body('Parse_JSON')?['new_budgetlineid']})",
+                                "new_clientid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_clientid']})",
+                                "pics_destinationreason": "@body('Parse_JSON')?['pics_DestinationReason']",
+                                "new_paytoid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_paytoid']})",
+                                "pics_serviceagreementid@odata.bind": "/new_serviceagreements(@{body('Parse_JSON')?['pics_ServiceAgreementId']})",
+                                "pics_startdate": "@body('Parse_JSON')?['pics_StartDate']"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com/"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}"
+                        },
+                        "runAfter": {
+                            "Update_salesorder": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_new_mileageentry_2": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "new_budgetlineid@odata.bind": "/new_serviceagreementdetails(@{body('Parse_JSON')?['new_budgetlineid']})",
+                                "new_clientid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_clientid']})",
+                                "pics_destinationreason": "@body('Parse_JSON')?['pics_DestinationReason']",
+                                "new_paytoid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_paytoid']})",
+                                "pics_serviceagreementid@odata.bind": "/new_serviceagreements(@{body('Parse_JSON')?['pics_ServiceAgreementId']})",
+                                "pics_startdate": "@body('Parse_JSON')?['pics_StartDate']",
+                                "pics_fee": "@mul(body('Parse_JSON')?['pics_Fee'], -1)"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com/"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}"
+                        },
+                        "runAfter": {
+                            "Add_a_new_mileageentry": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Condition": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Condition": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('Execute_query'))",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Terminate": {
+                        "type": "Terminate",
+                        "inputs": {
+                            "runStatus": "Succeeded"
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Execute_query": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "Central Standard Time",
+                    "schedule": {
+                        "hours": [
+                            3
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

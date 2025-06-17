@@ -1,0 +1,1070 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <PowerAppsTargetsPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\PowerApps</PowerAppsTargetsPath>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>LSS.Xrm.CustomApis.ServiceAgreementDetailRecalc.snk</AssemblyOriginatorKeyFile>
+    <AssemblyVersion>1.0.0.7</AssemblyVersion>
+    <FileVersion>1.0.0.7</FileVersion>
+    <ProjectTypeGuids>{4C25E9B5-9FA6-436c-8E19-B395D2A65FAF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+
+  <Import Project="$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.props" Condition="Exists('$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.props')" />
+
+  <!--
+    NuGet pack and restore as MSBuild targets reference:
+    https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets
+  -->
+  <PropertyGroup>
+    <PackageId>LSS.Xrm.CustomApis.ServiceAgreementDetailRecalc</PackageId>
+    <Version>$(FileVersion)</Version>
+    <Authors>E100209</Authors>
+    <Company>RSM US LLP</Company>
+    <Description>This is a sample nuget package which contains a Dataverse plugin and its runtime dependencies like Newtonsoft.Json</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.*" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.PowerApps.MSBuild.Plugin" Version="1.*" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.*" PrivateAssets="All" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Common\LSS.D365.CE.Common\ExtensionMethods\EntityExtensions.cs">
+      <Link>Utils\ExtensionMethods\EntityExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Common\PluginBase.cs">
+      <Link>PluginBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.DataAccess\BaseDal.cs">
+      <Link>DataAccess\BaseDal.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.DataAccess\DataAccessUtils.cs">
+      <Link>DataAccess\DataAccessUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.DataAccess\SalesOrderDetailDal.cs">
+      <Link>DataAccess\SalesOrderDetailDal.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.DataAccess\ServiceAgreementDetailDal.cs">
+      <Link>DataAccess\ServiceAgreementDetailDal.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.DataAccess\TimeEntryDetailDal.cs">
+      <Link>DataAccess\TimeEntryDetailDal.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ChangeDetectConfig.cs">
+      <Link>Models\ChangeDetectConfig.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\IRollupEntityChangeHandler.cs">
+      <Link>Models\ProxyClasses\IRollupEntityChangeHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\invoice.cs">
+      <Link>Models\ProxyClasses\Entitites\invoice.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\new_expense.cs">
+      <Link>Models\ProxyClasses\Entitites\new_expense.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\new_mileageentry.cs">
+      <Link>Models\ProxyClasses\Entitites\new_mileageentry.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\new_serviceagreement.cs">
+      <Link>Models\ProxyClasses\Entitites\new_serviceagreement.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\new_serviceagreementdetail.cs">
+      <Link>Models\ProxyClasses\Entitites\new_serviceagreementdetail.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\new_timeentrydetail.cs">
+      <Link>Models\ProxyClasses\Entitites\new_timeentrydetail.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\pics_claimactivity.cs">
+      <Link>Models\ProxyClasses\Entitites\pics_claimactivity.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\pics_employeebudgetdetail.cs">
+      <Link>Models\ProxyClasses\Entitites\pics_employeebudgetdetail.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\pics_fee.cs">
+      <Link>Models\ProxyClasses\Entitites\pics_fee.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\salesorder.cs">
+      <Link>Models\ProxyClasses\Entitites\salesorder.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Entities\salesorderdetail.cs">
+      <Link>Models\ProxyClasses\Entitites\salesorderdetail.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\EntityOptionSetEnum.cs">
+      <Link>Models\ProxyClasses\EntityOptionSetEnum.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Messages\DeleteMultiple.cs">
+      <Link>Models\ProxyClasses\Messages\DeleteMultiple.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Messages\pics_ExpenseEmailResponse.cs">
+      <Link>Models\ProxyClasses\Messages\pics_ExpenseEmailResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Messages\pics_RecalculateSvcAgrmtDetailSpentToDate.cs">
+      <Link>Models\ProxyClasses\Messages\pics_RecalculateSvcAgrmtDetailSpentToDate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\Messages\pics_test.cs">
+      <Link>Models\ProxyClasses\Messages\pics_test.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\activityfileattachment_objectcode.cs">
+      <Link>Models\ProxyClasses\OptionSets\activityfileattachment_objectcode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\activitypointer_activitytypecode.cs">
+      <Link>Models\ProxyClasses\OptionSets\activitypointer_activitytypecode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\activitypointer_deliveryprioritycode.cs">
+      <Link>Models\ProxyClasses\OptionSets\activitypointer_deliveryprioritycode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\activity_mailmergetypecode.cs">
+      <Link>Models\ProxyClasses\OptionSets\activity_mailmergetypecode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\activity_typecode.cs">
+      <Link>Models\ProxyClasses\OptionSets\activity_typecode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\addlistcampaign.cs">
+      <Link>Models\ProxyClasses\OptionSets\addlistcampaign.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\aioperationoverridetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\aioperationoverridetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\aipluginsubtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\aipluginsubtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\aiplugintype.cs">
+      <Link>Models\ProxyClasses\OptionSets\aiplugintype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\allocationtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\allocationtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\applicationaccess.cs">
+      <Link>Models\ProxyClasses\OptionSets\applicationaccess.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\applicationbasedaccesslist_cloud.cs">
+      <Link>Models\ProxyClasses\OptionSets\applicationbasedaccesslist_cloud.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\bookableresourcecharacteristictype.cs">
+      <Link>Models\ProxyClasses\OptionSets\bookableresourcecharacteristictype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\botcomponentcollectionsharingroletype.cs">
+      <Link>Models\ProxyClasses\OptionSets\botcomponentcollectionsharingroletype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\botcomponentreusepolicy.cs">
+      <Link>Models\ProxyClasses\OptionSets\botcomponentreusepolicy.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\botsharingroletypes.cs">
+      <Link>Models\ProxyClasses\OptionSets\botsharingroletypes.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\budgetstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\budgetstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\bulkemail_recipient.cs">
+      <Link>Models\ProxyClasses\OptionSets\bulkemail_recipient.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\bulkemail_recipients.cs">
+      <Link>Models\ProxyClasses\OptionSets\bulkemail_recipients.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\capability.cs">
+      <Link>Models\ProxyClasses\OptionSets\capability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\cascadecaseclosurepreference.cs">
+      <Link>Models\ProxyClasses\OptionSets\cascadecaseclosurepreference.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\chatbotlanguage.cs">
+      <Link>Models\ProxyClasses\OptionSets\chatbotlanguage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\componentstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\componentstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\componenttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\componenttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\connectionrole_category.cs">
+      <Link>Models\ProxyClasses\OptionSets\connectionrole_category.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\connectortype.cs">
+      <Link>Models\ProxyClasses\OptionSets\connectortype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convertrule_channelactivity.cs">
+      <Link>Models\ProxyClasses\OptionSets\convertrule_channelactivity.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_deactivate_status.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_deactivate_status.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_option.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_option.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_qualify_lead_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_qualify_lead_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_sales_entity_type.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_sales_entity_type.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_to_lead_disqualify_status.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_to_lead_disqualify_status.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_to_lead_option.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_to_lead_option.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\convert_campaign_response_to_lead_qualify_status.cs">
+      <Link>Models\ProxyClasses\OptionSets\convert_campaign_response_to_lead_qualify_status.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\copilotexamplequestiontknowledgetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\copilotexamplequestiontknowledgetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\customapifieldtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\customapifieldtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\delete_recurringappointmentmaster.cs">
+      <Link>Models\ProxyClasses\OptionSets\delete_recurringappointmentmaster.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\dependencytype.cs">
+      <Link>Models\ProxyClasses\OptionSets\dependencytype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\emailserverprofile_authenticationprotocol.cs">
+      <Link>Models\ProxyClasses\OptionSets\emailserverprofile_authenticationprotocol.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\entitytype.cs">
+      <Link>Models\ProxyClasses\OptionSets\entitytype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\field_security_permission_readunmasked.cs">
+      <Link>Models\ProxyClasses\OptionSets\field_security_permission_readunmasked.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\field_security_permission_type.cs">
+      <Link>Models\ProxyClasses\OptionSets\field_security_permission_type.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\flipswitch_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\flipswitch_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\fullsyncstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\fullsyncstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\goal_fiscalperiod.cs">
+      <Link>Models\ProxyClasses\OptionSets\goal_fiscalperiod.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\goal_fiscalyear.cs">
+      <Link>Models\ProxyClasses\OptionSets\goal_fiscalyear.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\incidentresolutionformtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\incidentresolutionformtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\incidentupdateafterresolution.cs">
+      <Link>Models\ProxyClasses\OptionSets\incidentupdateafterresolution.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\incident_caseorigincode.cs">
+      <Link>Models\ProxyClasses\OptionSets\incident_caseorigincode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\initialcommunication.cs">
+      <Link>Models\ProxyClasses\OptionSets\initialcommunication.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\isinherited.cs">
+      <Link>Models\ProxyClasses\OptionSets\isinherited.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\knowledgearticle_expirationstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\knowledgearticle_expirationstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\lead_salesstage.cs">
+      <Link>Models\ProxyClasses\OptionSets\lead_salesstage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\mainfewshotentitytype.cs">
+      <Link>Models\ProxyClasses\OptionSets\mainfewshotentitytype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\makerfewshotsqlcorrectness.cs">
+      <Link>Models\ProxyClasses\OptionSets\makerfewshotsqlcorrectness.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\metric_goaltype.cs">
+      <Link>Models\ProxyClasses\OptionSets\metric_goaltype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\mobileofflineenabledentities.cs">
+      <Link>Models\ProxyClasses\OptionSets\mobileofflineenabledentities.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynce_contentstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynce_contentstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyncrm_addtocalendarchoiceoptions.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyncrm_addtocalendarchoiceoptions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyncrm_backgroundsizetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyncrm_backgroundsizetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyncrm_backgroundwidthtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyncrm_backgroundwidthtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyncrm_borderstyletype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyncrm_borderstyletype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyncrm_fittype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyncrm_fittype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyncrm_imagepickerassetsproviders.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyncrm_imagepickerassetsproviders.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyncrm_targettype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyncrm_targettype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_eventmetadataintegrationstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_eventmetadataintegrationstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_eventmetadatastate.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_eventmetadatastate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_eventmetadatastatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_eventmetadatastatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_eventparametertype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_eventparametertype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_feature_state_option_set.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_feature_state_option_set.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_messagedesignation.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_messagedesignation.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_picklistsupportedlanguages.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_picklistsupportedlanguages.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdynmkt_placeholdertype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdynmkt_placeholdertype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_actiontype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_actiontype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_agentdisplayname.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_agentdisplayname.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_agentinputlanguage.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_agentinputlanguage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_analyticsreporttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_analyticsreporttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_apiversionoptions.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_apiversionoptions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_applicationtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_applicationtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_assignmentconfigurationsteptype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_assignmentconfigurationsteptype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_attachmenttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_attachmenttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_basepresencestatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_basepresencestatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_bookableresourcetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_bookableresourcetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_botfailureactiontype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_botfailureactiontype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_capacityformat.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_capacityformat.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_channelmessagecontextparttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_channelmessagecontextparttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_channelmessageparttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_channelmessageparttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ci_locale.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ci_locale.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_computationaccuracy.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_computationaccuracy.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_configurationstatus_optionset.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_configurationstatus_optionset.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_consoleapplicationnotificationaction.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_consoleapplicationnotificationaction.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_consoleapplicationparameterruntimetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_consoleapplicationparameterruntimetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_consultmodetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_consultmodetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_conversationaccesstype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_conversationaccesstype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_conversationaction_language_locale.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_conversationaction_language_locale.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_conversationcharacteristicsource.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_conversationcharacteristicsource.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_conversationcharacteristicstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_conversationcharacteristicstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_conversation_statecode.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_conversation_statecode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_conversation_statuscode.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_conversation_statuscode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_dataflowtemplatestate.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_dataflowtemplatestate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_dataloadconfigstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_dataloadconfigstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_datasettype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_datasettype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_dataversecomponenttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_dataversecomponenttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_decisionrulesettype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_decisionrulesettype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_desktopnotificationsettings.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_desktopnotificationsettings.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_desktopnotificationvisibility.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_desktopnotificationvisibility.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_deviceevent.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_deviceevent.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_emailtemplatetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_emailtemplatetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_eventtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_eventtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_extensiontype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_extensiontype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_externalparticipantchanneltype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_externalparticipantchanneltype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_flaggedstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_flaggedstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_flow_approvalresponseoptionstype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_flow_approvalresponseoptionstype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_flow_approvalstage.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_flow_approvalstage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_flow_approval_priority.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_flow_approval_priority.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_flow_approval_requesttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_flow_approval_requesttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_harvestingtag.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_harvestingtag.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_iermlmodelstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_iermlmodelstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_iermlmodeltrainingstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_iermlmodeltrainingstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_importconfigtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_importconfigtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_intent_source.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_intent_source.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_invitestatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_invitestatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_iotaggregation.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_iotaggregation.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_iotfielddataformat.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_iotfielddataformat.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_iotmappingtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_iotmappingtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_iotsearchtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_iotsearchtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_iotsource.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_iotsource.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_kpicomputationaccuracy.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_kpicomputationaccuracy.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_languagecodes.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_languagecodes.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_lastsessionoutcome.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_lastsessionoutcome.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_lastsessionoutcomereason.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_lastsessionoutcomereason.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_leadgradeoptset.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_leadgradeoptset.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_leadscoretrendoptset.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_leadscoretrendoptset.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_liveworkitemeventtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_liveworkitemeventtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_mcsbotstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_mcsbotstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_mlmodeltype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_mlmodeltype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_mltrainingstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_mltrainingstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_msdyn_unifiedroutingrun_msdyn_routingstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_msdyn_unifiedroutingrun_msdyn_routingstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_notificationtheme.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_notificationtheme.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_notificationtypes.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_notificationtypes.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_numberofsearchresults.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_numberofsearchresults.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocadminmode.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocadminmode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocauthenticationtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocauthenticationtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocauthsettingendpointregions.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocauthsettingendpointregions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_occallingoptions.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_occallingoptions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_occallsessioneventreasons.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_occallsessioneventreasons.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocmessagereceiver.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocmessagereceiver.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocmessagetemplatetrigger.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocmessagetemplatetrigger.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocrichobjecttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocrichobjecttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocrichobject_msdyn_locale.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocrichobject_msdyn_locale.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocsitrainingdatastatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocsitrainingdatastatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocskillidentmlmodelstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocskillidentmlmodelstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocskillidentmlmodeltrainingstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocskillidentmlmodeltrainingstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocsystemmessageeventtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocsystemmessageeventtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ocsystemmessagetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ocsystemmessagetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_opportunitygradeoptset.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_opportunitygradeoptset.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_opportunityscoretrendoptset.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_opportunityscoretrendoptset.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_overflowactiontype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_overflowactiontype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_ownerviewstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_ownerviewstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_panelstateoptions.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_panelstateoptions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_panestate.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_panestate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_personalmessage_localefield.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_personalmessage_localefield.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_personasecurityrolemapping_msdyn_personatype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_personasecurityrolemapping_msdyn_personatype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_playbookactivity_priority.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_playbookactivity_priority.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_playbookactivity_time.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_playbookactivity_time.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_postconversationsurveymode.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_postconversationsurveymode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_predictivescoretrend.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_predictivescoretrend.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_predictivescoringgrade.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_predictivescoringgrade.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_preferredagentbackupmode.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_preferredagentbackupmode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_propertytype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_propertytype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_queueassignmentstrategy.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_queueassignmentstrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_queuetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_queuetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_relationship_cardinality.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_relationship_cardinality.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_reviewstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_reviewstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_reviewstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_reviewstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_routingconfigurationsteptype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_routingconfigurationsteptype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_routingfailurestage.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_routingfailurestage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_rulesetauthoringmode.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_rulesetauthoringmode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_salesagenthandoverintenttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_salesagenthandoverintenttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_salesagenthandovertarget.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_salesagenthandovertarget.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_salesmicroagenttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_salesmicroagenttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_salesmotion_type.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_salesmotion_type.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_salesplay_type.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_salesplay_type.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_screenpoptimeout.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_screenpoptimeout.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_sequencestep_subtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_sequencestep_subtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_sequencestep_type.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_sequencestep_type.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_sequencetemplatesupportedlanguages.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_sequencetemplatesupportedlanguages.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_sessionoutcome.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_sessionoutcome.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_sessionoutcomereason.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_sessionoutcomereason.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_sessiontypeoptions.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_sessiontypeoptions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_smstemplate_category.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_smstemplate_category.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_smstemplate_permission.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_smstemplate_permission.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_solutionarea_type.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_solutionarea_type.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_spamtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_spamtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_streamsource.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_streamsource.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_suggestedpriority.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_suggestedpriority.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_suggestioncontroltype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_suggestioncontroltype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_suggestiontype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_suggestiontype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_surveyprovider.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_surveyprovider.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_timerangetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_timerangetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_timetrackercategoryoptionset.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_timetrackercategoryoptionset.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_timetrackerreasoncategoryoptionset.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_timetrackerreasoncategoryoptionset.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_unifiedroutingdiagnostic_msdyn_diagnosticdatatype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_unifiedroutingdiagnostic_msdyn_diagnosticdatatype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_unifiedroutingdiagnostic_msdyn_ruletype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_unifiedroutingdiagnostic_msdyn_ruletype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_upgradestatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_upgradestatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_visitorjourneytype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_visitorjourneytype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_visualizationconfigtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_visualizationconfigtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_vivacopilottype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_vivacopilottype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_workdistributionmode.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_workdistributionmode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msdyn_workspacetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\msdyn_workspacetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\msft_datastate.cs">
+      <Link>Models\ProxyClasses\OptionSets\msft_datastate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\mspp_columnpermissionvalues.cs">
+      <Link>Models\ProxyClasses\OptionSets\mspp_columnpermissionvalues.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\need.cs">
+      <Link>Models\ProxyClasses\OptionSets\need.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_addresstype.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_addresstype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_globalpaycodes.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_globalpaycodes.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_gpcompany.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_gpcompany.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_gppaymentstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_gppaymentstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_gpstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_gpstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_markuptype.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_markuptype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_mncounties.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_mncounties.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_modelofservice.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_modelofservice.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_payrollstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_payrollstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_procedurecode.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_procedurecode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_program.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_program.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_providercode.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_providercode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_servicetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_servicetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\new_subx.cs">
+      <Link>Models\ProxyClasses\OptionSets\new_subx.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\officedocument_documenttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\officedocument_documenttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\onlinemeetingtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\onlinemeetingtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\openaischemaversion.cs">
+      <Link>Models\ProxyClasses\OptionSets\openaischemaversion.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\opportunity_salesstage.cs">
+      <Link>Models\ProxyClasses\OptionSets\opportunity_salesstage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\organization_applicationbasedaccesscontrolmode.cs">
+      <Link>Models\ProxyClasses\OptionSets\organization_applicationbasedaccesscontrolmode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\organization_samesitemodeforsessioncookie.cs">
+      <Link>Models\ProxyClasses\OptionSets\organization_samesitemodeforsessioncookie.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\orginsightsconfiguration_lookback.cs">
+      <Link>Models\ProxyClasses\OptionSets\orginsightsconfiguration_lookback.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\orginsightsconfiguration_plotoption.cs">
+      <Link>Models\ProxyClasses\OptionSets\orginsightsconfiguration_plotoption.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\photo_resolution.cs">
+      <Link>Models\ProxyClasses\OptionSets\photo_resolution.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_audit.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_audit.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_consolidationreporttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_consolidationreporttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_language.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_language.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_modifier.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_modifier.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_relationshiptoclient.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_relationshiptoclient.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_relationshiptofeinholder.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_relationshiptofeinholder.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_requirementtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_requirementtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_salutation.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_salutation.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_specificwaiver.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_specificwaiver.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_staffingtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_staffingtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_state.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_state.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\pics_timecardfilterstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\pics_timecardfilterstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\powerbimashupparametervaluesource.cs">
+      <Link>Models\ProxyClasses\OptionSets\powerbimashupparametervaluesource.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\powerpagecomponenttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\powerpagecomponenttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\powerpagelanguages.cs">
+      <Link>Models\ProxyClasses\OptionSets\powerpagelanguages.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\principalsyncattributemapping_syncdirection.cs">
+      <Link>Models\ProxyClasses\OptionSets\principalsyncattributemapping_syncdirection.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\processstage_category.cs">
+      <Link>Models\ProxyClasses\OptionSets\processstage_category.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\purchaseprocess.cs">
+      <Link>Models\ProxyClasses\OptionSets\purchaseprocess.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\purchasetimeframe.cs">
+      <Link>Models\ProxyClasses\OptionSets\purchasetimeframe.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\qooidetail_skippricecalculation.cs">
+      <Link>Models\ProxyClasses\OptionSets\qooidetail_skippricecalculation.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\qooiproduct_producttype.cs">
+      <Link>Models\ProxyClasses\OptionSets\qooiproduct_producttype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\qooiproduct_propertiesconfigurationstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\qooiproduct_propertiesconfigurationstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\qooi_pricingerrorcode.cs">
+      <Link>Models\ProxyClasses\OptionSets\qooi_pricingerrorcode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\qooi_skippricecalculation.cs">
+      <Link>Models\ProxyClasses\OptionSets\qooi_skippricecalculation.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\quotecreationmethod.cs">
+      <Link>Models\ProxyClasses\OptionSets\quotecreationmethod.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\rangeends_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\rangeends_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\recurrencerule_monthofyear.cs">
+      <Link>Models\ProxyClasses\OptionSets\recurrencerule_monthofyear.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\registrationstatustype.cs">
+      <Link>Models\ProxyClasses\OptionSets\registrationstatustype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\repeatpattern_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\repeatpattern_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\resourcetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\resourcetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\restapiauthtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\restapiauthtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\rundesktopflowconnectiontype.cs">
+      <Link>Models\ProxyClasses\OptionSets\rundesktopflowconnectiontype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\salesordercreationmethod.cs">
+      <Link>Models\ProxyClasses\OptionSets\salesordercreationmethod.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\sameweekday_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\sameweekday_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\sameweekweek_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\sameweekweek_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\searchentity.cs">
+      <Link>Models\ProxyClasses\OptionSets\searchentity.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\securityrole_isautoassigned.cs">
+      <Link>Models\ProxyClasses\OptionSets\securityrole_isautoassigned.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\selection_rule_criteria.cs">
+      <Link>Models\ProxyClasses\OptionSets\selection_rule_criteria.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\selection_rule_quantity.cs">
+      <Link>Models\ProxyClasses\OptionSets\selection_rule_quantity.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\selection_rule_sites.cs">
+      <Link>Models\ProxyClasses\OptionSets\selection_rule_sites.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\serviceappointment_startdate.cs">
+      <Link>Models\ProxyClasses\OptionSets\serviceappointment_startdate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\serviceappointment_starttime.cs">
+      <Link>Models\ProxyClasses\OptionSets\serviceappointment_starttime.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\serviceappointment_status.cs">
+      <Link>Models\ProxyClasses\OptionSets\serviceappointment_status.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\servicestage.cs">
+      <Link>Models\ProxyClasses\OptionSets\servicestage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\sharepointdocumentlocation_locationtype.cs">
+      <Link>Models\ProxyClasses\OptionSets\sharepointdocumentlocation_locationtype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\sharepointsite_servicetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\sharepointsite_servicetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\sharepoint_validationstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\sharepoint_validationstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\sharepoint_validationstatusreason.cs">
+      <Link>Models\ProxyClasses\OptionSets\sharepoint_validationstatusreason.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\sla_slaenabledentities.cs">
+      <Link>Models\ProxyClasses\OptionSets\sla_slaenabledentities.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\socialactivity_postmessagetype.cs">
+      <Link>Models\ProxyClasses\OptionSets\socialactivity_postmessagetype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\socialprofile_community.cs">
+      <Link>Models\ProxyClasses\OptionSets\socialprofile_community.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkdestinationsyncstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkdestinationsyncstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkentitymetadatastate.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkentitymetadatastate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkentitypartitionstrategy.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkentitypartitionstrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkentitysource.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkentitysource.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkentitysyncstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkentitysyncstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkexternaltablestate.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkexternaltablestate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkprofileentitytype.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkprofileentitytype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkprofilestate.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkprofilestate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkprofiletype.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkprofiletype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkschedulerecurrenceunit.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkschedulerecurrenceunit.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinkscheduletype.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinkscheduletype.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\synapselinksynapsetablecreationstate.cs">
+      <Link>Models\ProxyClasses\OptionSets\synapselinksynapsetablecreationstate.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\syncattributemapping_syncdirection.cs">
+      <Link>Models\ProxyClasses\OptionSets\syncattributemapping_syncdirection.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\syncstatus.cs">
+      <Link>Models\ProxyClasses\OptionSets\syncstatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\templatedefaultview.cs">
+      <Link>Models\ProxyClasses\OptionSets\templatedefaultview.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\workflowlog_objecttypecode.cs">
+      <Link>Models\ProxyClasses\OptionSets\workflowlog_objecttypecode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\workflow_runas.cs">
+      <Link>Models\ProxyClasses\OptionSets\workflow_runas.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\workflow_stage.cs">
+      <Link>Models\ProxyClasses\OptionSets\workflow_stage.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OptionSets\yearlymonth_options.cs">
+      <Link>Models\ProxyClasses\OptionSets\yearlymonth_options.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\OrgSvcContext.cs">
+      <Link>Models\ProxyClasses\OrgSvcContext.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\EmplBudgetDetailRollupChangeHandler.cs">
+      <Link>Services\RollupChangeHandlers\EmplBudgetDetailRollupChangeHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\ExpenseRollupChangeHandler.cs">
+      <Link>Services\RollupChangeHandlers\ExpenseRollupChangeHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\FeeRollupChangeHandler.cs">
+      <Link>Services\RollupChangeHandlers\FeeRollupChangeHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\MileageEntryRollupChangeHandler.cs">
+      <Link>Services\RollupChangeHandlers\MileageEntryRollupChangeHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\RollupEntityChangeHandlerFactory.cs">
+      <Link>Services\RollupChangeHandlers\RollupEntityChangeHandlerFactory.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\SalesOrderDetailRollupChangeHandler.cs">
+      <Link>Services\RollupChangeHandlers\SalesOrderDetailRollupChangeHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\SalesOrderRollupChangeHandler.cs">
+      <Link>Services\RollupChangeHandlers\SalesOrderRollupChangeHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\ServiceAgreementDetailRollupService.cs">
+      <Link>Services\ServiceAgreementDetailRollupService.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Common\LSS.D365.CE.Services\TimeEntryDetailRollupChangeHandler.cs">
+      <Link>Services\RollupChangeHandlers\TimeEntryDetailRollupChangeHandler.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\Common\LSS.D365.CE.Models\ProxyClasses\builderSettings.json">
+      <Link>Models\ProxyClasses\builderSettings.json</Link>
+    </Content>
+  </ItemGroup>
+
+  <Import Project="$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.targets" Condition="Exists('$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.targets')" />
+</Project>

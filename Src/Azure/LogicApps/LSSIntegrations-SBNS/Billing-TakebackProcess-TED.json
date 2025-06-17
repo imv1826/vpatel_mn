@@ -1,0 +1,318 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Execute_query": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "exec [PICS_CE_Staging].dbo.pLSS_TakeBackTimeEntry;"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-8",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {}
+            },
+            "For_each": {
+                "type": "foreach",
+                "foreach": "@outputs('Execute_query')?['body']",
+                "actions": {
+                    "Parse_JSON": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "RecordType": {
+                                        "type": "string"
+                                    },
+                                    "claimid": {
+                                        "type": "string"
+                                    },
+                                    "new_name": {
+                                        "type": "string"
+                                    },
+                                    "new_EndTimeandDate": {
+                                        "type": "string"
+                                    },
+                                    "new_Hours": {
+                                        "type": "integer"
+                                    },
+                                    "new_PayrollStatus": {
+                                        "type": "string"
+                                    },
+                                    "new_Rate": {
+                                        "type": "integer"
+                                    },
+                                    "new_ReadyToProcess": {
+                                        "type": "boolean"
+                                    },
+                                    "new_reasonrejected": {
+                                        "type": "string"
+                                    },
+                                    "new_StartTimeandDate": {
+                                        "type": "string"
+                                    },
+                                    "new_TotalCost": {
+                                        "type": "integer"
+                                    },
+                                    "new_Unitsof15minutes": {
+                                        "type": "integer"
+                                    },
+                                    "pics_CreatedByPortalUser": {
+                                        "type": "boolean"
+                                    },
+                                    "pics_ErrorMessage": {
+                                        "type": "string"
+                                    },
+                                    "pics_LineNumber": {
+                                        "type": "integer"
+                                    },
+                                    "pics_ModifiedByPortalUser": {
+                                        "type": "boolean"
+                                    },
+                                    "pics_PortalStatus": {
+                                        "type": "string"
+                                    },
+                                    "new_ClientId": {
+                                        "type": "string"
+                                    },
+                                    "new_employeeid": {
+                                        "type": "string"
+                                    },
+                                    "new_payrollbatchid": {
+                                        "type": "string"
+                                    },
+                                    "new_payrolltimeid": {
+                                        "type": "string"
+                                    },
+                                    "new_timecardid": {
+                                        "type": "string"
+                                    },
+                                    "pics_EEBudgetDetailId": {
+                                        "type": "string"
+                                    },
+                                    "pics_DateSubmitted": {
+                                        "type": "string"
+                                    },
+                                    "pics_Fee": {
+                                        "type": "integer"
+                                    },
+                                    "pics_DatePaid": {
+                                        "type": "string"
+                                    },
+                                    "pics_StaffingType": {
+                                        "type": "string"
+                                    },
+                                    "pics_OverrideCalculation": {
+                                        "type": "boolean"
+                                    },
+                                    "pics_HideSSReport": {
+                                        "type": "boolean"
+                                    },
+                                    "new_timeentrydetailId": {
+                                        "type": "string"
+                                    },
+                                    "new_ExceptionPayCodeTimeCard": {
+                                        "type": "string"
+                                    },
+                                    "ProcessFlag": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Update_a_time_entry_detail": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmnop2oldev.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['new_timeentrydetailId']))})"
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_time_entry_detail": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "pics_eebudgetdetailid@odata.bind": "/pics_employeebudgetdetails(@{body('Parse_JSON')?['pics_EEBudgetDetailId']})",
+                                "new_endtimeanddate": "@body('Parse_JSON')?['new_EndTimeandDate']",
+                                "new_hours": "@body('Parse_JSON')?['new_Hours']",
+                                "new_clientid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_ClientId']})",
+                                "new_rate": "@body('Parse_JSON')?['new_Rate']",
+                                "new_starttimeanddate": "@body('Parse_JSON')?['new_StartTimeandDate']",
+                                "new_employeeid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_employeeid']})"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmnop2oldev.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}"
+                        },
+                        "runAfter": {
+                            "Update_a_time_entry_detail": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_new_time_entry_detail_2": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "pics_eebudgetdetailid@odata.bind": "/pics_employeebudgetdetails(@{body('Parse_JSON')?['pics_EEBudgetDetailId']})",
+                                "new_endtimeanddate": "@body('Parse_JSON')?['new_EndTimeandDate']",
+                                "new_hours": "@body('Parse_JSON')?['new_Hours']",
+                                "new_clientid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_ClientId']})",
+                                "new_rate": "@body('Parse_JSON')?['new_Rate']",
+                                "new_starttimeanddate": "@body('Parse_JSON')?['new_StartTimeandDate']",
+                                "new_employeeid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_employeeid']})"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmnop2oldev.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}"
+                        },
+                        "runAfter": {
+                            "Add_a_time_entry_detail": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_a_salesorder": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statecode": "@if(and(or(equals(trim(body('Parse_JSON')?['RecordType']), 'Original'),equals(trim(body('Parse_JSON')?['RecordType']), 'OriginalFee')),equals(body('Get_a_row_by_ID')?['statecode'], 0)), 456010013, body('Get_a_row_by_ID')?['statecode'])"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmnop2oldev.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['claimid']))})"
+                        },
+                        "runAfter": {
+                            "Get_a_row_by_ID": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Get_a_row_by_ID": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmnop2oldev.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['claimid']))})",
+                            "queries": {
+                                "$select": "statecode"
+                            }
+                        },
+                        "runAfter": {
+                            "Add_a_new_time_entry_detail_2": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Condition": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Condition": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('Execute_query'))",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Terminate": {
+                        "type": "Terminate",
+                        "inputs": {
+                            "runStatus": "Succeeded"
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Execute_query": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "Central America Standard Time",
+                    "schedule": {
+                        "hours": [
+                            12
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

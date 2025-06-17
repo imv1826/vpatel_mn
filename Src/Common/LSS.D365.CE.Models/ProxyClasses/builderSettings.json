@@ -1,0 +1,32 @@
+﻿{
+  "emitEntityETC": true,
+  "emitFieldsClasses": true,
+  "emitVirtualAttributes": true,
+  "entityNamesFilter": [
+    "invoice",
+    "new_expense",
+    "new_mileageentry",
+    "new_serviceagreement",
+    "new_serviceagreementdetail",
+    "new_timeentrydetail",
+    "pics_employeebudgetdetail",
+    "pics_claimactivity",
+    "pics_fee",
+    "salesorder",
+    "salesorderdetail"
+  ],
+  "entityTypesFolder": "Entities",
+  "generateGlobalOptionSets": true,
+  "generateSdkMessages": true,
+  "language": "CS",
+  "messageNamesFilter": [
+    "pics_*",
+    "new_*"
+  ],
+  "messagesTypesFolder": "Messages",
+  "namespace": "LSS.D365.CE.Models.ProxyClasses",
+  "optionSetsTypesFolder": "OptionSets",
+  "serviceContextName": "OrgSvcContext",
+  "suppressGeneratedCodeAttribute": false,
+  "suppressINotifyPattern": true
+}

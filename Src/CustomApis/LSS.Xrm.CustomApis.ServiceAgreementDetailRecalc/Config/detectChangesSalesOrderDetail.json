@@ -1,0 +1,8 @@
+{
+  "sourceAttributesMonitored": [
+    "extendedamount",
+    "new_dateofserviceorexpense",
+    "salesorderid",
+    "productid"
+  ]
+}

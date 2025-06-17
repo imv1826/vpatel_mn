@@ -1,0 +1,480 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Parse_payroll_batch_message": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@triggerBody()?['contentData']",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "contentData": {
+                                "type": "object",
+                                "properties": {
+                                    "messageId": {
+                                        "type": "string"
+                                    },
+                                    "initiatedOn": {
+                                        "type": "integer"
+                                    },
+                                    "messageName": {
+                                        "type": "string"
+                                    },
+                                    "logLevel": {
+                                        "type": "string"
+                                    },
+                                    "document": {
+                                        "type": "object",
+                                        "properties": {
+                                            "modifiedby": {
+                                                "type": "string"
+                                            },
+                                            "modifiedon": {
+                                                "type": "string"
+                                            },
+                                            "modifiedonbehalfby": {},
+                                            "new_batchid": {
+                                                "type": "string"
+                                            },
+                                            "new_gpcompany": {
+                                                "type": "integer"
+                                            },
+                                            "new_gpcompany_formatted": {
+                                                "type": "string"
+                                            },
+                                            "new_payrollbatchid": {
+                                                "type": "string"
+                                            },
+                                            "pics_sendtogp": {
+                                                "type": "boolean"
+                                            },
+                                            "payrolldetails": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "new_rateofpay": {
+                                                            "type": "number"
+                                                        },
+                                                        "new_payrolldetailid": {
+                                                            "type": "string"
+                                                        },
+                                                        "pics_program": {
+                                                            "type": "integer"
+                                                        },
+                                                        "new_employeeid": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_hours": {
+                                                            "type": "number"
+                                                        },
+                                                        "new_gpstatus": {
+                                                            "type": "integer"
+                                                        },
+                                                        "new_payrollperiodstartdate": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_paycode": {
+                                                            "type": "integer"
+                                                        },
+                                                        "new_payrollperiodenddate": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee.pics_employeenumber": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_rateofpay_formatted": {
+                                                            "type": "string"
+                                                        },
+                                                        "pics_program_formatted": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_employeeid_formatted": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_hours_formatted": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_gpstatus_formatted": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_payrollperiodstartdate_formatted": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_paycode_formatted": {
+                                                            "type": "string"
+                                                        },
+                                                        "new_payrollperiodenddate_formatted": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "new_rateofpay",
+                                                        "new_payrolldetailid",
+                                                        "pics_program",
+                                                        "new_employeeid",
+                                                        "new_hours",
+                                                        "new_gpstatus",
+                                                        "new_payrollperiodstartdate",
+                                                        "new_paycode",
+                                                        "new_payrollperiodenddate",
+                                                        "new_rateofpay_formatted",
+                                                        "pics_program_formatted",
+                                                        "new_employeeid_formatted",
+                                                        "new_hours_formatted",
+                                                        "new_gpstatus_formatted",
+                                                        "new_payrollperiodstartdate_formatted",
+                                                        "new_paycode_formatted",
+                                                        "new_payrollperiodenddate_formatted"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "contentType": {
+                                "type": "string"
+                            },
+                            "userProperties": {
+                                "type": "object",
+                                "properties": {
+                                    "request-Id": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "messageId": {
+                                "type": "string"
+                            },
+                            "scheduledEnqueueTimeUtc": {
+                                "type": "string"
+                            },
+                            "sessionId": {
+                                "type": "string"
+                            },
+                            "correlationId": {
+                                "type": "string"
+                            },
+                            "timeToLive": {
+                                "type": "string"
+                            },
+                            "deliveryCount": {
+                                "type": "integer"
+                            },
+                            "enqueuedSequenceNumber": {
+                                "type": "integer"
+                            },
+                            "enqueuedTimeUtc": {
+                                "type": "string"
+                            },
+                            "lockedUntilUtc": {
+                                "type": "string"
+                            },
+                            "lockToken": {
+                                "type": "string"
+                            },
+                            "sequenceNumber": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {}
+            },
+            "Is_PICS_batch": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@body('Parse_payroll_batch_message')?['contentData']?['document']?['new_gpcompany']",
+                                "@100000000"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Upsert_UPR_batch_in_GP_PICS": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "storedProcedureName": "taCreatePayrollBatchHeaderInsert",
+                                "storedProcedureParameters": {
+                                    "I_vBACHNUMB": "@{body('Parse_payroll_batch_message')?['contentData']?['document']?['new_batchid']}",
+                                    "I_vUPRBCHOR": "@{1}"
+                                },
+                                "includeEmptyResultSets": false
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "sql-11",
+                                "operationId": "executeStoredProcedure",
+                                "serviceProviderId": "/serviceProviders/sql"
+                            }
+                        }
+                    },
+                    "Is_PICS_UPR_batch_upsert_succeeded": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@body('Upsert_UPR_batch_in_GP_PICS')?['outputParameters']?['@O_iErrorState']",
+                                        "@0"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "For_each_payroll_detail_in_PICS_batch": {
+                                "type": "foreach",
+                                "foreach": "@body('Parse_payroll_batch_message')?['contentData']?['document']?['payrolldetails']",
+                                "actions": {
+                                    "Is_PICS_payroll_detail_paid": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@item()?['new_gpstatus']",
+                                                        "@100000001"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {},
+                                        "else": {
+                                            "actions": {
+                                                "Insert_UPR_computer_check_to_PICS_batch": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "storedProcedureName": "taCreateComputerCheckLineInsert",
+                                                            "storedProcedureParameters": {
+                                                                "I_vEMPLOYID": "@{item()?['employee.pics_employeenumber']}",
+                                                                "I_vBACHNUMB": "@{body('Parse_payroll_batch_message')?['contentData']?['document']?['new_batchid']}",
+                                                                "I_vUPRTRXCD": "@{if(or(equals(items('For_each_payroll_detail_in_PICS_batch')['new_paycode_formatted'], 'Other Flat'), equals(items('For_each_payroll_detail_in_PICS_batch')['new_paycode_formatted'], 'Other Hourly')), 'HOURLY', items('For_each_payroll_detail_in_PICS_batch')['new_paycode_formatted'])}",
+                                                                "l_vTRXBEGDT": "@{if(empty(item()?['new_payrollperiodstartdate']), '01-01-1900', formatDateTime(item()?['new_payrollperiodstartdate'], 'MM-dd-yyyy'))}",
+                                                                "l_vTRXENDDT": "@{if(empty(item()?['new_payrollperiodenddate']), '01-01-1900', formatDateTime(item()?['new_payrollperiodenddate'], 'MM-dd-yyyy'))}",
+                                                                "l_vHRLYPYRT": "@{item()?['new_rateofpay']}",
+                                                                "l_vTRXHRUNT": "@{item()?['new_hours']}",
+                                                                "l_vCOMPTRTP": "@{1}",
+                                                                "l_vWRKRCOMP": "@{8842}",
+                                                                "l_vSHFTCODE": "@{if(equals(item()?['pics_program_formatted'],'CFSS Budget'),'CFSSB',if(equals(item()?['pics_program_formatted'],'Private Pay'),'PP',if(equals(item()?['pics_program_formatted'],'Stearns County Personal Support'),'SCPS',if(equals(item()?['pics_program_formatted'],'Participant'),'PP',item()?['pics_program_formatted']))))}",
+                                                                "I_vPAYRTAMT": "@{item()?['new_rateofpay']}"
+                                                            },
+                                                            "includeEmptyResultSets": false
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "sql-11",
+                                                            "operationId": "executeStoredProcedure",
+                                                            "serviceProviderId": "/serviceProviders/sql"
+                                                        }
+                                                    }
+                                                },
+                                                "Is_PICS_insert_UPR_computer_check_succeeded": {
+                                                    "type": "If",
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "equals": [
+                                                                    "@body('Insert_UPR_computer_check_to_PICS_batch')?['outputParameters']?['@O_iErrorState']",
+                                                                    "@0"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "actions": {
+                                                        "Write_PICS_success_status_to_CRM": {
+                                                            "type": "ApiConnection",
+                                                            "inputs": {
+                                                                "host": {
+                                                                    "connection": {
+                                                                        "referenceName": "commondataservice-1"
+                                                                    }
+                                                                },
+                                                                "method": "patch",
+                                                                "body": {
+                                                                    "new_gpstatus": 100000003
+                                                                },
+                                                                "headers": {
+                                                                    "prefer": "return=representation,odata.include-annotations=*",
+                                                                    "accept": "application/json;odata.metadata=full",
+                                                                    "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                                },
+                                                                "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_payrolldetails'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_payrolldetailid']))})"
+                                                            }
+                                                        }
+                                                    },
+                                                    "else": {
+                                                        "actions": {
+                                                            "Write_PICS_failure_status_to_CRM": {
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "referenceName": "commondataservice-1"
+                                                                        }
+                                                                    },
+                                                                    "method": "patch",
+                                                                    "body": {
+                                                                        "new_gpstatus": 100000002,
+                                                                        "pics_gpsyncerrors": "See integration log for details"
+                                                                    },
+                                                                    "headers": {
+                                                                        "prefer": "return=representation,odata.include-annotations=*",
+                                                                        "accept": "application/json;odata.metadata=full",
+                                                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                                    },
+                                                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_payrolldetails'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_payrolldetailid']))})"
+                                                                },
+                                                                "runAfter": {
+                                                                    "Log_GP_PICS_computer_check_upsert_error": [
+                                                                        "SUCCEEDED"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "Log_GP_PICS_computer_check_upsert_error": {
+                                                                "type": "ServiceProvider",
+                                                                "inputs": {
+                                                                    "parameters": {
+                                                                        "entityName": "integrationlogs",
+                                                                        "message": {
+                                                                            "contentData": {
+                                                                                "source": "dataverse",
+                                                                                "sourceEntity": "payrolldetail",
+                                                                                "sourceId": "@{item()?['new_payrolldetailid']}",
+                                                                                "target": "gppic",
+                                                                                "targetEntity": "computercheck",
+                                                                                "targetId": "@{body('Parse_payroll_batch_message')?['contentData']?['document']?['new_batchid']}|@{item()?['employee.pics_employeenumber']}",
+                                                                                "timestamp": "@{utcNow()}",
+                                                                                "logLevel": "Error",
+                                                                                "message": "@{replace(trim(body('Insert_UPR_computer_check_to_PICS_batch')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                            },
+                                                                            "sessionId": "econnect",
+                                                                            "correlationId": "@body('Parse_payroll_batch_message')?['correlationId']"
+                                                                        }
+                                                                    },
+                                                                    "serviceProviderConfiguration": {
+                                                                        "connectionName": "serviceBus",
+                                                                        "operationId": "sendMessage",
+                                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Insert_UPR_computer_check_to_PICS_batch": [
+                                                            "SUCCEEDED"
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "Complete_PICS_payroll_batch_message": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "messageId": "@body('Parse_payroll_batch_message')?['contentData']?['messageId']",
+                                        "lockToken": "@body('Parse_payroll_batch_message')?['lockToken']"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "serviceBus",
+                                        "operationId": "abandonMessageInSession",
+                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                    }
+                                },
+                                "runAfter": {
+                                    "For_each_payroll_detail_in_PICS_batch": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Log_GP_PICS_batch_upsert_error": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "entityName": "integrationlogs",
+                                            "message": {
+                                                "contentData": {
+                                                    "source": "dataverse",
+                                                    "sourceEntity": "batch",
+                                                    "sourceId": "@{body('Parse_payroll_batch_message')?['contentData']?['document']?['new_payrollbatchid']}",
+                                                    "target": "gppic",
+                                                    "targetEntity": "uprbatch",
+                                                    "targetId": "@{body('Parse_payroll_batch_message')?['contentData']?['document']?['new_batchid']}",
+                                                    "timestamp": "@{utcNow()}",
+                                                    "logLevel": "Error",
+                                                    "message": "@{replace(trim(body('Upsert_UPR_batch_in_GP_PICS')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                },
+                                                "sessionId": "econnect",
+                                                "correlationId": "@body('Parse_payroll_batch_message')?['correlationId']"
+                                            }
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "serviceBus",
+                                            "operationId": "sendMessage",
+                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Upsert_UPR_batch_in_GP_PICS": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Parse_payroll_batch_message": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Get_new_messages_from_payroll_batch_queue": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "gpintegrations",
+                        "sessionId": "payrollbatch",
+                        "maxMessages": 1
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 2,
+                    "frequency": "Minute"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 1
+                    }
+                },
+                "splitOn": "@triggerOutputs()?['body']"
+            }
+        }
+    },
+    "kind": "Stateful"
+}

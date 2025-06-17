@@ -1,0 +1,294 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Select_sorted_props": {
+                "type": "Select",
+                "inputs": {
+                    "from": "@triggerBody()?['contentData']",
+                    "select": {
+                        "sortKey": "@{concat(item()?['correlationId'], '-', item()?['contentData']?['messageName'], '-', item()?['contentData']?['document']?['initiatedOn'])}",
+                        "originalItem": "@{item()}"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Order_the_messages": {
+                "type": "Compose",
+                "inputs": "@sort(body('Select_sorted_props'), 'sortKey')",
+                "runAfter": {
+                    "Select_sorted_props": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "For_Each_Message": {
+                "type": "Foreach",
+                "foreach": "@outputs('Order_the_messages')",
+                "actions": {
+                    "Is_Table_Definition_Missing": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "not": {
+                                        "equals": [
+                                            "@length(body('Find_Table_Info'))",
+                                            "@1"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Get_table_definition_from_database": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "query": "SELECT COLUMN_NAME\nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_NAME = N'@{item()?['tableName']}'"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-6",
+                                        "operationId": "executeQuery",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "If_Definition_Found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@length(body('Get_table_definition_from_database'))",
+                                                "@1"
+                                            ]
+                                        },
+                                        {
+                                            "equals": [
+                                                "@length(length(body('Get_table_definition_from_database')))",
+                                                "@1"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Add_Definition_to_tableInfos": {
+                                        "type": "AppendToArrayVariable",
+                                        "inputs": {
+                                            "name": "tableInfos",
+                                            "value": "@first(first(body('Get_table_definition_from_database')))"
+                                        }
+                                    },
+                                    "Set_currentTableInfo_-_New": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "currentTableInfo",
+                                            "value": "@first(first(body('Get_table_definition_from_database')))"
+                                        },
+                                        "runAfter": {
+                                            "Add_Definition_to_tableInfos": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Set_currentTableInfo_to_null": {
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "currentTableInfo",
+                                                "value": "@null"
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Get_table_definition_from_database": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Set_currentTableInfo_-_Existing": {
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "currentTableInfo",
+                                        "value": "@first(body('Find_Table_Info'))"
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Find_Table_Info": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Find_Table_Info": {
+                        "type": "Query",
+                        "inputs": {
+                            "from": "@variables('tableInfos')",
+                            "where": "@equals(item()?['tableName'],items('For_Each_Message')?['originalItem']?['tableName'])"
+                        }
+                    },
+                    "If_currentTableInfo_Not_null": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "not": {
+                                        "equals": [
+                                            "@variables('currentTableInfo')",
+                                            "@null"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Build_the_SQL_Statement": {
+                                "type": "JavaScriptCode",
+                                "inputs": {
+                                    "code": "const currentTableInfo = workflowContext.actions.Compose_currentTableInfo.outputs;\r\nconst message = workflowContext.actions.Compose_Current_Message.outputs;\r\n\r\nfunction isValueString(value) {\r\n    return typeof value === \"string\" || value instanceof String;\r\n}\r\n\r\nfunction isValueBoolean(value) {\r\n    return typeof value === \"boolean\" || value instanceof Boolean;\r\n}\r\n\r\nfunction isStringDate(dateString) {\r\n    return !isNaN(Date.parse(dateString));\r\n}\r\n\r\nfunction formatDateStringToSql(dateString) {\r\n    return dateString.replace(\"Z\", \"\").replace(/\\.\\d+/, \"\").replace(/T/, \" \");\r\n}\r\n\r\nfunction parseValueSQLString(value) {\r\n    if (isValueString(value)) {\r\n        if (value.includes(\"'\")) {\r\n            value = value.replace(/'/g, \"''\");\r\n        }\r\n\r\n        if (isStringDate(value)) {\r\n            value = formatDateStringToSql(value);\r\n        }\r\n\r\n        return value === null || value === undefined ? \"null\" : value.toString();\r\n    }\r\n\r\n    if (isValueBoolean(value)) {\r\n        return value ? \"1\" : \"0\";\r\n    }\r\n\r\n    return value === null || value === undefined ? \"null\" : value.toString();\r\n}\r\n\r\nconst targetTableColNames = currentTableInfo.map(function (col) {\r\n    return col.COLUMN_NAME.toLowerCase();\r\n});\r\n\r\nconst messageName = message.messageName;\r\nconst tableName = message.tableName;\r\nconst sourceEntityRecord = message.document;\r\n\r\nconst recordId = sourceEntityRecord[\"\".concat(tableName, \"id\")];\r\n\r\nconst recordCleaned = Object.entries(sourceEntityRecord).sort(function (a, b) {\r\n    const aKey = a[0].toLowerCase();\r\n    const bKey = b[0].toLowerCase();\r\n    if (aKey < bKey) {\r\n        return -1;\r\n    }\r\n    if (aKey > bKey) {\r\n        return 1;\r\n    }\r\n    return 0;\r\n}).reduce(function (acc, _a) {\r\n    const key = _a[0], value = _a[1];\r\n    if (targetTableColNames.includes(key)) {\r\n        acc[key] = parseValueSQLString(value);\r\n    }\r\n    return acc;\r\n}, {});\r\n\r\nif (Object.keys(recordCleaned).length <= 0) return null;\r\n\r\nswitch (messageName) {\r\n    case \"Create\":\r\n        return `INSERT INTO stg.${tableName} (${Object.keys(recordCleaned).join(\", \")})\r\n              VALUES (${Object.values(recordCleaned).join(\", \")});`;\r\n    case \"Update\":\r\n        return `UPDATE stg.${tableName}\r\n              SET ${Object.entries(recordCleaned).map(([key, value]) => `${key} = ${value}`).join(\", \")}\r\n              WHERE ${tableName}id = '${recordId}';`;\r\n    case \"Delete\":\r\n        return `DELETE\r\n              FROM stg.${tableName}\r\n              WHERE ${tableName}id = '${recordId}';`;\r\n    default:\r\n        return null;\r\n}"
+                                }
+                            },
+                            "If_Can_Execute": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "not": {
+                                                "equals": [
+                                                    "@outputs('Build_the_SQL_Statement')",
+                                                    "@null"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Execute_query": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "query": "@outputs('Build_the_SQL_Statement')"
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-6",
+                                                "operationId": "executeQuery",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {}
+                                },
+                                "runAfter": {
+                                    "Build_the_SQL_Statement": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Compose_Current_Message": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Compose_currentTableInfo": {
+                        "type": "Compose",
+                        "inputs": "@variables('currentTableInfo')",
+                        "runAfter": {
+                            "Is_Table_Definition_Missing": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Compose_Current_Message": {
+                        "type": "Compose",
+                        "inputs": "@items('For_Each_Message')",
+                        "runAfter": {
+                            "Compose_currentTableInfo": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Initialize_currentTableInfo": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_tableInfos": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "tableInfos",
+                            "type": "array",
+                            "value": []
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Order_the_messages": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_currentTableInfo": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "currentTableInfo",
+                            "type": "object"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_tableInfos": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "On_new_messages_from_queue_session": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "staging-dataverse-entity",
+                        "maxMessages": 5
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 5,
+                    "frequency": "Second",
+                    "timeZone": "Mountain Standard Time",
+                    "startTime": "2025-04-15T16:04:00Z"
+                },
+                "splitOn": "@triggerOutputs()?['body']"
+            }
+        }
+    },
+    "kind": "Stateful"
+}

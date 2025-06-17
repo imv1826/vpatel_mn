@@ -1,0 +1,616 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each_vendor_message": {
+                "type": "Foreach",
+                "foreach": "@triggerBody()",
+                "actions": {
+                    "Parse_vendor_message": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each_vendor_message')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "contentData": {
+                                        "type": "object",
+                                        "properties": {
+                                            "messageId": {
+                                                "type": "string"
+                                            },
+                                            "initiatedOn": {
+                                                "type": "integer"
+                                            },
+                                            "messageName": {
+                                                "type": "string"
+                                            },
+                                            "logLevel": {
+                                                "type": "string"
+                                            },
+                                            "document": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "address1_city": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_composite": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line1": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line2": {
+                                                        "type": "string"
+                                                    },
+                                                    "contactid": {
+                                                        "type": "string"
+                                                    },
+                                                    "emailaddress2": {
+                                                        "type": "string"
+                                                    },
+                                                    "firstname": {
+                                                        "type": "string"
+                                                    },
+                                                    "fullname": {
+                                                        "type": "string"
+                                                    },
+                                                    "middlename": {
+                                                        "type": "string"
+                                                    },
+                                                    "mobilephone": {
+                                                        "type": "string"
+                                                    },
+                                                    "modifiedby": {
+                                                        "type": "string"
+                                                    },
+                                                    "modifiedon": {
+                                                        "type": "string"
+                                                    },
+                                                    "modifiedonbehalfby": {},
+                                                    "pics_address1state": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pics_address1state_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_createvendorin": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pics_createvendorin_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_vendor_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_vendorholdstatus": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "pics_vendorholdstatus_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_vendoridfea": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_vendoridpics": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_vendortaxid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_zipcode": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_zipcode_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "telephone1": {
+                                                        "type": "string"
+                                                    },
+                                                    "telephone2": {
+                                                        "type": "string"
+                                                    },
+                                                    "yomifullname": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "contentType": {
+                                        "type": "string"
+                                    },
+                                    "userProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "request-Id": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "messageId": {
+                                        "type": "string"
+                                    },
+                                    "scheduledEnqueueTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "sessionId": {
+                                        "type": "string"
+                                    },
+                                    "correlationId": {
+                                        "type": "string"
+                                    },
+                                    "timeToLive": {
+                                        "type": "string"
+                                    },
+                                    "deliveryCount": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedSequenceNumber": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockedUntilUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockToken": {
+                                        "type": "string"
+                                    },
+                                    "sequenceNumber": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Is_vendor_in_PIC": {
+                        "type": "If",
+                        "expression": {
+                            "or": [
+                                {
+                                    "equals": [
+                                        "@body('Parse_vendor_message')?['contentData']?['document']?['pics_createvendorin']",
+                                        "@456010002"
+                                    ]
+                                },
+                                {
+                                    "equals": [
+                                        "@body('Parse_vendor_message')?['contentData']?['document']?['pics_createvendorin']",
+                                        "@456010000"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Upsert_vendor_in_GP_PIC": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "storedProcedureName": "taUpdateCreateVendorRcd",
+                                        "storedProcedureParameters": {
+                                            "I_vVENDORID": "@{if(empty(body('Get_next_PIC_Vendor_ID_from_GP')), body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridpics'], body('Get_next_PIC_Vendor_ID_from_GP')[0]?[0]?['nextVendorID'])}",
+                                            "I_vVENDNAME": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendor_name']}",
+                                            "I_vADDRESS1": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_line1']}",
+                                            "I_vADDRESS2": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_line2']}",
+                                            "I_vADDRESS3": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_line3']}",
+                                            "I_vCITY": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_city']}",
+                                            "I_vSTATE": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                            "I_vZIPCODE": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_zipcode_formatted']}",
+                                            "I_vVADDCDPR": "PRIMARY",
+                                            "I_vFAXNUMBR": "@{body('Parse_vendor_message')?['contentData']?['document']?['fax']}",
+                                            "I_vHOLD": "@{if(body('Parse_vendor_message')?['contentData']?['document']?['pics_vendorholdstatus'],1,0)}",
+                                            "I_vPHNUMBR1": "@{if(empty(body('Parse_vendor_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_vendor_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vPHNUMBR2": "@{if(empty(body('Parse_vendor_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_vendor_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vPHNUMBR3": "@{if(empty(body('Parse_vendor_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_vendor_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vTXIDNMBR": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendortaxid']}",
+                                            "I_vVNDCHKNM": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendor_name']}"
+                                        },
+                                        "includeEmptyResultSets": false
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-11",
+                                        "operationId": "executeStoredProcedure",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                },
+                                "runAfter": {
+                                    "Is_existing_PIC_vendor_found": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            },
+                            "Is_existing_PIC_vendor_found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "greater": [
+                                                "@length(body('Check_for_existing_vendor_in_GP_PIC'))",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {},
+                                "else": {
+                                    "actions": {
+                                        "Get_next_PIC_Vendor_ID_from_GP": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "query": "select left(max(vendorid), LEN(max(vendorid)) - len(max(RIGHT(rtrim(vendorid),6))+1)) + CAST(max(RIGHT(rtrim(vendorid),6))+1 as varchar(10)) as nextVendorID from pm00200 where LEFT(vendorid, 3) = 'PIC'"
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeQuery",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Check_for_existing_vendor_in_GP_PIC": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            },
+                            "Is_GP_PIC_vendor_upsert_succeeded": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@body('Upsert_vendor_in_GP_PIC')?['outputParameters']?['@O_iErrorState']",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {},
+                                "else": {
+                                    "actions": {
+                                        "Log_GP_PIC_vendor_upsert_error": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "entityName": "integrationslog",
+                                                    "message": {
+                                                        "contentData": {
+                                                            "workflowName": "@{workflow().name}",
+                                                            "runId": "@{workflow().run.name}",
+                                                            "source": "dataverse",
+                                                            "sourceEntity": "contact",
+                                                            "sourceId": "@{body('Parse_vendor_message')?['contentData']?['document']?['contactid']}",
+                                                            "target": "gppic",
+                                                            "targetEntity": "vendor",
+                                                            "targetId": "@{if(empty(body('Get_next_PIC_Vendor_ID_from_GP')), body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridpics'], body('Get_next_PIC_Vendor_ID_from_GP')[0]?[0]?['nextVendorID'])}",
+                                                            "timestamp": "@{utcNow()}",
+                                                            "logLevel": "Error",
+                                                            "message": "@{replace(trim(body('Upsert_vendor_in_GP_PIC')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                        },
+                                                        "contentType": "@item()?['contentType']",
+                                                        "sessionId": "econnect",
+                                                        "correlationId": "@body('Parse_vendor_message')?['correlationId']"
+                                                    }
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "serviceBus",
+                                                    "operationId": "sendMessage",
+                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Upsert_vendor_in_GP_PIC": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            },
+                            "Check_for_existing_vendor_in_GP_PIC": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[dbo].[PM00200]",
+                                        "columnValuesForWhereCondition": {
+                                            "VENDORID": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridpics']}"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-11",
+                                        "operationId": "getRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Update_PIC_vendor_id_in_CRM_": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "pics_vendoridpics": "@if(empty(body('Get_next_PIC_Vendor_ID_from_GP')), body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridpics'], body('Get_next_PIC_Vendor_ID_from_GP')[0]?[0]?['nextVendorID'])"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('contacts'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_vendor_message')?['contentData']?['document']?['contactid']))})"
+                                },
+                                "runAfter": {
+                                    "Is_GP_PIC_vendor_upsert_succeeded": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Is_vendor_in_FEA": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Is_vendor_in_FEA": {
+                        "type": "If",
+                        "expression": {
+                            "or": [
+                                {
+                                    "equals": [
+                                        "@body('Parse_vendor_message')?['contentData']?['document']?['pics_createvendorin']",
+                                        "@456010002"
+                                    ]
+                                },
+                                {
+                                    "equals": [
+                                        "@body('Parse_vendor_message')?['contentData']?['document']?['pics_createvendorin']",
+                                        "@456010001"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Is_existing_FEA_vendor_found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "greater": [
+                                                "@length(body('Check_for_existing_vendor_in_GP_FEA'))",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {},
+                                "else": {
+                                    "actions": {
+                                        "Get_next_FEA_Vendor_ID_from_GP": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "query": "select left(max(vendorid), LEN(max(vendorid)) - len(max(RIGHT(rtrim(vendorid),6))+1)) + CAST(max(RIGHT(rtrim(vendorid),6))+1 as varchar(10)) as nextVendorID from pm00200 where LEFT(vendorid, 3) = 'FEA'"
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-8",
+                                                    "operationId": "executeQuery",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Check_for_existing_vendor_in_GP_FEA": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            },
+                            "Is_GP_FEA_vendor_upsert_succeeded": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@body('Upsert_vendor_in_GP_FEA')?['outputParameters']?['@O_iErrorState']",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {},
+                                "else": {
+                                    "actions": {
+                                        "Log_GP_FEA_vendor_upsert_error": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "entityName": "integrationslog",
+                                                    "message": {
+                                                        "contentData": {
+                                                            "workflowName": "@{workflow().name}",
+                                                            "runId": "@{workflow().run.name}",
+                                                            "source": "dataverse",
+                                                            "sourceEntity": "contact",
+                                                            "sourceId": "@{body('Parse_vendor_message')?['contentData']?['document']?['contactid']}",
+                                                            "target": "gpfea",
+                                                            "targetEntity": "vendor",
+                                                            "targetId": "@{if(empty(body('Get_next_FEA_Vendor_ID_from_GP')), body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridfea'], body('Get_next_FEA_Vendor_ID_from_GP')[0]?[0]?['nextVendorID'])}",
+                                                            "timestamp": "@{utcNow()}",
+                                                            "logLevel": "Error",
+                                                            "message": "@{replace(trim(body('Upsert_vendor_in_GP_FEA')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                        },
+                                                        "contentType": "@item()?['contentType']",
+                                                        "sessionId": "econnect",
+                                                        "correlationId": "@body('Parse_vendor_message')?['correlationId']"
+                                                    }
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "serviceBus",
+                                                    "operationId": "sendMessage",
+                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Upsert_vendor_in_GP_FEA": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            },
+                            "Upsert_vendor_in_GP_FEA": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "storedProcedureName": "taUpdateCreateVendorRcd",
+                                        "storedProcedureParameters": {
+                                            "I_vVENDORID": "@{if(empty(body('Get_next_FEA_Vendor_ID_from_GP')), body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridfea'], body('Get_next_FEA_Vendor_ID_from_GP')[0]?[0]?['nextVendorID'])}",
+                                            "I_vVENDNAME": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendor_name']}",
+                                            "I_vADDRESS1": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_line1']}",
+                                            "I_vADDRESS2": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_line2']}",
+                                            "I_vADDRESS3": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_line3']}",
+                                            "I_vCITY": "@{body('Parse_vendor_message')?['contentData']?['document']?['address1_city']}",
+                                            "I_vSTATE": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                            "I_vZIPCODE": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_zipcode_formatted']}",
+                                            "I_vVADDCDPR": "PRIMARY",
+                                            "I_vFAXNUMBR": "@{body('Parse_vendor_message')?['contentData']?['document']?['fax']}",
+                                            "I_vHOLD": "@{if(body('Parse_vendor_message')?['contentData']?['document']?['pics_vendorholdstatus'],1,0)}",
+                                            "I_vPHNUMBR1": "@{if(empty(body('Parse_vendor_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_vendor_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vPHNUMBR2": "@{if(empty(body('Parse_vendor_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_vendor_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vPHNUMBR3": "@{if(empty(body('Parse_vendor_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_vendor_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                            "I_vTXIDNMBR": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendortaxid']}",
+                                            "I_vVNDCHKNM": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendor_name']}"
+                                        },
+                                        "includeEmptyResultSets": false
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-8",
+                                        "operationId": "executeStoredProcedure",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                },
+                                "runAfter": {
+                                    "Is_existing_FEA_vendor_found": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            },
+                            "Update_FEA_vendor_id_in_CRM": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "pics_vendoridfea": "@if(empty(body('Get_next_FEA_Vendor_ID_from_GP')), body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridfea'], body('Get_next_FEA_Vendor_ID_from_GP')[0]?[0]?['nextVendorID'])"
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('contacts'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_vendor_message')?['contentData']?['document']?['contactid']))})"
+                                },
+                                "runAfter": {
+                                    "Is_GP_FEA_vendor_upsert_succeeded": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            },
+                            "Check_for_existing_vendor_in_GP_FEA": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[dbo].[PM00200]",
+                                        "columnValuesForWhereCondition": {
+                                            "VENDORID": "@{body('Parse_vendor_message')?['contentData']?['document']?['pics_vendoridfea']}"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-8",
+                                        "operationId": "getRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Parse_vendor_message": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Complete_vendor_message": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "messageId": "@body('Parse_vendor_message')?['messageId']",
+                                "lockToken": "@body('Parse_vendor_message')?['lockToken']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "serviceBus",
+                                "operationId": "completeMessageInSession",
+                                "serviceProviderId": "/serviceProviders/serviceBus"
+                            }
+                        },
+                        "runAfter": {
+                            "Is_vendor_in_PIC": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Get_new_messages_from_vendor_queue": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "gpintegrations",
+                        "sessionId": "vendor",
+                        "maxMessages": 100
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 2,
+                    "frequency": "Minute"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 1
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

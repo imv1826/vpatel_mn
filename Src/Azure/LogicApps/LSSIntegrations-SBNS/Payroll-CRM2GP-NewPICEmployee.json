@@ -1,0 +1,1203 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each_budget_detail_message": {
+                "type": "Foreach",
+                "foreach": "@triggerBody()",
+                "actions": {
+                    "Parse_budget_detail_message": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each_budget_detail_message')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "contentData": {
+                                        "type": "object",
+                                        "properties": {
+                                            "messageId": {
+                                                "type": "string"
+                                            },
+                                            "initiatedOn": {
+                                                "type": "integer"
+                                            },
+                                            "messageName": {
+                                                "type": "string"
+                                            },
+                                            "logLevel": {
+                                                "type": "string"
+                                            },
+                                            "document": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "pics_employeebudgetdetailid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_employeeid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_employeeid_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_sanumberid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_sanumberid_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.contactid": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.familystatuscode": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee.address1_city": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.emailaddress1": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_ssn": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.lastname": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.address1_postalcode": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_address1state": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee.address1_line1": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.middlename": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_lastdateworked": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_employmenttype": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee.birthdate": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.gendercode": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee.telephone2": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.new_dateofhire": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_address1_countyid": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.firstname": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_sutastate": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee.pics_employeenumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.familystatuscode_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_address1state_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_lastdateworked_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_employmenttype_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.birthdate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.gendercode_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.new_dateofhire_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_address1_countyid_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.pics_sutastate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee.county.pics_account": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "contentType": {
+                                        "type": "string"
+                                    },
+                                    "userProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "request-Id": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "messageId": {
+                                        "type": "string"
+                                    },
+                                    "scheduledEnqueueTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "sessionId": {
+                                        "type": "string"
+                                    },
+                                    "correlationId": {
+                                        "type": "string"
+                                    },
+                                    "timeToLive": {
+                                        "type": "string"
+                                    },
+                                    "deliveryCount": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedSequenceNumber": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockedUntilUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockToken": {
+                                        "type": "string"
+                                    },
+                                    "sequenceNumber": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Check_for_existing_employee_in_GP": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "tableName": "[dbo].[UPR00100]",
+                                "columnValuesForWhereCondition": {
+                                    "EMPLOYID": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_employeenumber']}"
+                                }
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "sql-11",
+                                "operationId": "getRows",
+                                "serviceProviderId": "/serviceProviders/sql"
+                            }
+                        },
+                        "runAfter": {
+                            "Parse_budget_detail_message": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Is_existing_employee_found": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "greater": [
+                                        "@length(body('Check_for_existing_employee_in_GP'))",
+                                        "@0"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {},
+                        "else": {
+                            "actions": {
+                                "Get_next_employee_number_from_GP": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "query": "select isnull(max(employid),100000)+1 as nextEmployeeNumber from upr00100 where LEFT(employid,1) = '1'"
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "sql-11",
+                                            "operationId": "executeQuery",
+                                            "serviceProviderId": "/serviceProviders/sql"
+                                        }
+                                    }
+                                },
+                                "Insert_new_employee_in_GP": {
+                                    "type": "ServiceProvider",
+                                    "inputs": {
+                                        "parameters": {
+                                            "storedProcedureName": "taCreateEmployee",
+                                            "storedProcedureParameters": {
+                                                "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                "I_vADDRESS1": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.address1_line1']}",
+                                                "I_vADDRESS2": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.address1_line2']}",
+                                                "I_vADDRESS3": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.address1_line3']}",
+                                                "I_vADRSCODE": "PRIMARY",
+                                                "I_vSTRTDATE": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.new_dateofhire']), '01-01-1900', formatDateTime(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.new_dateofhire'], 'MM-dd-yyyy'))}",
+                                                "I_vBENADJDATE": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.new_rehiredate']), '01-01-1900', formatDateTime(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.new_rehiredate'], 'MM-dd-yyyy'))}",
+                                                "I_vCITY": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.address1_city']}",
+                                                "I_vEMPLCLAS": "PICS",
+                                                "I_vCOUNTY": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_address1_countyid_formatted']}",
+                                                "I_vDEPRTMNT": "PICS",
+                                                "I_vEMPLOYMENTTYPE": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_employmenttype']), 1, body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_employmenttype'])}",
+                                                "I_vEMPLSUFF": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.suffix']}",
+                                                "I_vFAX": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.fax']}",
+                                                "I_vFRSTNAME": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.firstname']}",
+                                                "I_vGENDER": "@{if(equals(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.gendercode_formatted'], 'Male'), 1, if(equals(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.gendercode_formatted'], 'Female'), 2, 3))}",
+                                                "I_vBRTHDATE": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.birthdate']), '01-01-1900', formatDateTime(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.birthdate'], 'MM-dd-yyyy'))}",
+                                                "I_vLASTDAYWORKED_I": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_lastdateworked']), '01-01-1900', formatDateTime(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_lastdateworked'], 'MM-dd-yyyy'))}",
+                                                "I_vLASTNAME": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.lastname']}",
+                                                "I_vLOCATNID": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.county.pics_account']), '', substring(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.county.pics_account'], sub(length(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.county.pics_account']), 4)))}",
+                                                "I_vMARITALSTATUS": "@{if(equals(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.familystatuscodename_formatted'], 'Married'), 1, if(equals(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.familystatuscodename_formatted'], 'Single'), 2, 3))}",
+                                                "I_vMIDLNAME": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.middlename']}",
+                                                "I_vPHONE1": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.telephone2']), '', replace(replace(replace(replace(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                                "I_vPHONE2": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.telephone1']), '', replace(replace(replace(replace(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                                "I_vPHONE3": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.telephone3']), '', replace(replace(replace(replace(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                                "I_vJOBTITLE": "PICS",
+                                                "I_Primary_Pay_Record": "HOURLY",
+                                                "I_vSOCSCNUM": "@{if(empty(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_ssn']), '', replace(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_ssn'], '-', ''))}",
+                                                "I_vSTATE": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_address1state_formatted']}",
+                                                "I_vSTATUSCD": "@{0}",
+                                                "I_vSUTASTAT": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.pics_sutastate_formatted']}",
+                                                "I_vWRKRCOMP": "@{8842}",
+                                                "I_vWorkflow_Approval_Status": "@{9}",
+                                                "I_vWorkflow_Priority": "@{0}",
+                                                "I_vZIPCODE": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.address1_postalcode']}"
+                                            },
+                                            "includeEmptyResultSets": false
+                                        },
+                                        "serviceProviderConfiguration": {
+                                            "connectionName": "sql-11",
+                                            "operationId": "executeStoredProcedure",
+                                            "serviceProviderId": "/serviceProviders/sql"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Get_next_employee_number_from_GP": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Is_insert_new_employee_succeeded": {
+                                    "type": "If",
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@body('Insert_new_employee_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                    "@0"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "actions": {
+                                        "Get_pay_codes_from_GP": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "query": "select PAYRCORD,ACRUSTIM,ACRUVACN,PAYPEROD,PAYUNPER,RPTASWGS,SBJTSSEC,SBJTFDTX,SBJTMCAR,SBJTFUTA,SBJTLTAX,SBJTSTTX,SBJTSUTA,TipType,W2BXLABL2,W2BXLABL3,W2BXLABL4,W2BXNMBR2,W2BXNMBR3,W2BXNMBR4 from UPR40600 WHERE PAYRCORD IN ('HOURLY', 'ADJ-TX', 'BONUS', 'OT HR', 'RETRO', 'PTO HR', 'TT HR') ORDER BY PAYRCORD"
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeQuery",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            }
+                                        },
+                                        "Insert_HOLIHR_employee_pay_code": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateEmployeePayCode",
+                                                    "storedProcedureParameters": {
+                                                        "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vACRUSTIM": "@{body('Get_pay_codes_from_GP')[0]?[0]?['ACRUSTIM']}",
+                                                        "I_vACRUVACN": "@{body('Get_pay_codes_from_GP')[0]?[0]?['ACRUVACN']}",
+                                                        "I_vPAYRCORD": "HOLIHR",
+                                                        "I_vPAYPEROD": "@{body('Get_pay_codes_from_GP')[0]?[0]?['PAYPEROD']}",
+                                                        "I_vPAYUNPER": "@{body('Get_pay_codes_from_GP')[0]?[0]?['PAYUNPER']}",
+                                                        "I_vRPTASWGS": "@{body('Get_pay_codes_from_GP')[0]?[0]?['RPTASWGS']}",
+                                                        "I_vSBJTSSEC": "@{body('Get_pay_codes_from_GP')[0]?[0]?['SBJTSSEC']}",
+                                                        "I_vSBJTFDTX": "@{body('Get_pay_codes_from_GP')[0]?[0]?['SBJTFDTX']}",
+                                                        "I_vSBJTMCAR": "@{body('Get_pay_codes_from_GP')[0]?[0]?['SBJTMCAR']}",
+                                                        "I_vSBJTFUTA": "@{body('Get_pay_codes_from_GP')[0]?[0]?['SBJTFUTA']}",
+                                                        "I_vSBJTLTAX": "@{body('Get_pay_codes_from_GP')[0]?[0]?['SBJTLTAX']}",
+                                                        "I_vSBJTSTTX": "@{body('Get_pay_codes_from_GP')[0]?[0]?['SBJTSTTX']}",
+                                                        "I_vSBJTSUTA": "@{body('Get_pay_codes_from_GP')[0]?[0]?['SBJTSUTA']}",
+                                                        "I_vTipType": "@{body('Get_pay_codes_from_GP')[0]?[0]?['TipType']}",
+                                                        "I_vUseDefaultCoPayCode": "1",
+                                                        "I_vW2BXLABL2": "@{body('Get_pay_codes_from_GP')[0]?[0]?['W2BXLABL2']}",
+                                                        "I_vW2BXLABL3": "@{body('Get_pay_codes_from_GP')[0]?[0]?['W2BXLABL3']}",
+                                                        "I_vW2BXLABL4": "@{body('Get_pay_codes_from_GP')[0]?[0]?['W2BXLABL4']}",
+                                                        "I_vW2BXNMBR2": "@{body('Get_pay_codes_from_GP')[0]?[0]?['W2BXNMBR2']}",
+                                                        "I_vW2BXNMBR3": "@{body('Get_pay_codes_from_GP')[0]?[0]?['W2BXNMBR3']}",
+                                                        "I_vW2BXNMBR4": "@{body('Get_pay_codes_from_GP')[0]?[0]?['W2BXNMBR4']}",
+                                                        "I_vWorkflow_Approval_Status": "@{0}",
+                                                        "I_vWorkflow_Priority": "@{0}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Get_pay_codes_from_GP": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_insert_HOLIHR_pay_code_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Insert_HOLIHR_employee_pay_code')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_insert_HOLIHR_pay_code_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "employeepaycode",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|HOLIHR",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Insert_HOLIHR_employee_pay_code')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Insert_HOLIHR_employee_pay_code": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Insert_BONUS_employee_pay_code": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateEmployeePayCode",
+                                                    "storedProcedureParameters": {
+                                                        "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vACRUSTIM": "@{body('Get_pay_codes_from_GP')[0]?[1]?['ACRUSTIM']}",
+                                                        "I_vACRUVACN": "@{body('Get_pay_codes_from_GP')[0]?[1]?['ACRUVACN']}",
+                                                        "I_vPAYRCORD": "BONUS",
+                                                        "I_vPAYPEROD": "@{body('Get_pay_codes_from_GP')[0]?[1]?['PAYPEROD']}",
+                                                        "I_vPAYUNPER": "@{body('Get_pay_codes_from_GP')[0]?[1]?['PAYUNPER']}",
+                                                        "I_vRPTASWGS": "@{body('Get_pay_codes_from_GP')[0]?[1]?['RPTASWGS']}",
+                                                        "I_vSBJTSSEC": "@{body('Get_pay_codes_from_GP')[0]?[1]?['SBJTSSEC']}",
+                                                        "I_vSBJTFDTX": "@{body('Get_pay_codes_from_GP')[0]?[1]?['SBJTFDTX']}",
+                                                        "I_vSBJTMCAR": "@{body('Get_pay_codes_from_GP')[0]?[1]?['SBJTMCAR']}",
+                                                        "I_vSBJTFUTA": "@{body('Get_pay_codes_from_GP')[0]?[1]?['SBJTFUTA']}",
+                                                        "I_vSBJTLTAX": "@{body('Get_pay_codes_from_GP')[0]?[1]?['SBJTLTAX']}",
+                                                        "I_vSBJTSTTX": "@{body('Get_pay_codes_from_GP')[0]?[1]?['SBJTSTTX']}",
+                                                        "I_vSBJTSUTA": "@{body('Get_pay_codes_from_GP')[0]?[1]?['SBJTSUTA']}",
+                                                        "I_vTipType": "@{body('Get_pay_codes_from_GP')[0]?[1]?['TipType']}",
+                                                        "I_vUseDefaultCoPayCode": "@{1}",
+                                                        "I_vW2BXLABL2": "@{body('Get_pay_codes_from_GP')[0]?[1]?['W2BXLABL2']}",
+                                                        "I_vW2BXLABL3": "@{body('Get_pay_codes_from_GP')[0]?[1]?['W2BXLABL3']}",
+                                                        "I_vW2BXLABL4": "@{body('Get_pay_codes_from_GP')[0]?[1]?['W2BXLABL4']}",
+                                                        "I_vW2BXNMBR2": "@{body('Get_pay_codes_from_GP')[0]?[1]?['W2BXNMBR2']}",
+                                                        "I_vW2BXNMBR3": "@{body('Get_pay_codes_from_GP')[0]?[1]?['W2BXNMBR3']}",
+                                                        "I_vW2BXNMBR4": "@{body('Get_pay_codes_from_GP')[0]?[1]?['W2BXNMBR4']}",
+                                                        "I_vWorkflow_Approval_Status": "@{0}",
+                                                        "I_vWorkflow_Priority": "@{0}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Is_insert_HOLIHR_pay_code_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_insert_BONUS_pay_code_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Insert_BONUS_employee_pay_code')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_insert_BONUS_pay_code_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "employeepaycode",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|BONUS",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Insert_BONUS_employee_pay_code')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Insert_BONUS_employee_pay_code": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Insert_HOURLY_employee_pay_code": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateEmployeePayCode",
+                                                    "storedProcedureParameters": {
+                                                        "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vACRUSTIM": "@{body('Get_pay_codes_from_GP')[0]?[2]?['ACRUSTIM']}",
+                                                        "I_vACRUVACN": "@{body('Get_pay_codes_from_GP')[0]?[2]?['ACRUVACN']}",
+                                                        "I_vPAYRCORD": "HOURLY",
+                                                        "I_vPAYPEROD": "@{body('Get_pay_codes_from_GP')[0]?[2]?['PAYPEROD']}",
+                                                        "I_vPAYUNPER": "@{body('Get_pay_codes_from_GP')[0]?[2]?['PAYUNPER']}",
+                                                        "I_vRPTASWGS": "@{body('Get_pay_codes_from_GP')[0]?[2]?['RPTASWGS']}",
+                                                        "I_vSBJTSSEC": "@{body('Get_pay_codes_from_GP')[0]?[2]?['SBJTSSEC']}",
+                                                        "I_vSBJTFDTX": "@{body('Get_pay_codes_from_GP')[0]?[2]?['SBJTFDTX']}",
+                                                        "I_vSBJTMCAR": "@{body('Get_pay_codes_from_GP')[0]?[2]?['SBJTMCAR']}",
+                                                        "I_vSBJTFUTA": "@{body('Get_pay_codes_from_GP')[0]?[2]?['SBJTFUTA']}",
+                                                        "I_vSBJTLTAX": "@{body('Get_pay_codes_from_GP')[0]?[2]?['SBJTLTAX']}",
+                                                        "I_vSBJTSTTX": "@{body('Get_pay_codes_from_GP')[0]?[2]?['SBJTSTTX']}",
+                                                        "I_vSBJTSUTA": "@{body('Get_pay_codes_from_GP')[0]?[2]?['SBJTSUTA']}",
+                                                        "I_vTipType": "@{body('Get_pay_codes_from_GP')[0]?[2]?['TipType']}",
+                                                        "I_vUseDefaultCoPayCode": "@{1}",
+                                                        "I_vW2BXLABL2": "@{body('Get_pay_codes_from_GP')[0]?[2]?['W2BXLABL2']}",
+                                                        "I_vW2BXLABL3": "@{body('Get_pay_codes_from_GP')[0]?[2]?['W2BXLABL3']}",
+                                                        "I_vW2BXLABL4": "@{body('Get_pay_codes_from_GP')[0]?[2]?['W2BXLABL4']}",
+                                                        "I_vW2BXNMBR2": "@{body('Get_pay_codes_from_GP')[0]?[2]?['W2BXNMBR2']}",
+                                                        "I_vW2BXNMBR3": "@{body('Get_pay_codes_from_GP')[0]?[2]?['W2BXNMBR3']}",
+                                                        "I_vW2BXNMBR4": "@{body('Get_pay_codes_from_GP')[0]?[2]?['W2BXNMBR4']}",
+                                                        "I_vWorkflow_Approval_Status": "@{0}",
+                                                        "I_vWorkflow_Priority": "@{0}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Is_insert_BONUS_pay_code_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_insert_HOURLY_pay_code_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Insert_HOURLY_employee_pay_code')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_insert_HOURLY_pay_code_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "employeepaycode",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|HOURLY",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Insert_HOURLY_employee_pay_code')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Insert_HOURLY_employee_pay_code": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Insert_OT_HR_employee_pay_code": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateEmployeePayCode",
+                                                    "storedProcedureParameters": {
+                                                        "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vACRUSTIM": "@{body('Get_pay_codes_from_GP')[0]?[3]?['ACRUSTIM']}",
+                                                        "I_vACRUVACN": "@{body('Get_pay_codes_from_GP')[0]?[3]?['ACRUVACN']}",
+                                                        "I_vPAYRCORD": "OT HR",
+                                                        "I_vPAYPEROD": "@{body('Get_pay_codes_from_GP')[0]?[3]?['PAYPEROD']}",
+                                                        "I_vPAYUNPER": "@{body('Get_pay_codes_from_GP')[0]?[3]?['PAYUNPER']}",
+                                                        "I_vRPTASWGS": "@{body('Get_pay_codes_from_GP')[0]?[3]?['RPTASWGS']}",
+                                                        "I_vSBJTSSEC": "@{body('Get_pay_codes_from_GP')[0]?[3]?['SBJTSSEC']}",
+                                                        "I_vSBJTFDTX": "@{body('Get_pay_codes_from_GP')[0]?[3]?['SBJTFDTX']}",
+                                                        "I_vSBJTMCAR": "@{body('Get_pay_codes_from_GP')[0]?[3]?['SBJTMCAR']}",
+                                                        "I_vSBJTFUTA": "@{body('Get_pay_codes_from_GP')[0]?[3]?['SBJTFUTA']}",
+                                                        "I_vSBJTLTAX": "@{body('Get_pay_codes_from_GP')[0]?[3]?['SBJTLTAX']}",
+                                                        "I_vSBJTSTTX": "@{body('Get_pay_codes_from_GP')[0]?[3]?['SBJTSTTX']}",
+                                                        "I_vSBJTSUTA": "@{body('Get_pay_codes_from_GP')[0]?[3]?['SBJTSUTA']}",
+                                                        "I_vTipType": "@{body('Get_pay_codes_from_GP')[0]?[3]?['TipType']}",
+                                                        "I_vUseDefaultCoPayCode": "@{1}",
+                                                        "I_vW2BXLABL2": "@{body('Get_pay_codes_from_GP')[0]?[3]?['W2BXLABL2']}",
+                                                        "I_vW2BXLABL3": "@{body('Get_pay_codes_from_GP')[0]?[3]?['W2BXLABL3']}",
+                                                        "I_vW2BXLABL4": "@{body('Get_pay_codes_from_GP')[0]?[3]?['W2BXLABL4']}",
+                                                        "I_vW2BXNMBR2": "@{body('Get_pay_codes_from_GP')[0]?[3]?['W2BXNMBR2']}",
+                                                        "I_vW2BXNMBR3": "@{body('Get_pay_codes_from_GP')[0]?[3]?['W2BXNMBR3']}",
+                                                        "I_vW2BXNMBR4": "@{body('Get_pay_codes_from_GP')[0]?[3]?['W2BXNMBR4']}",
+                                                        "I_vWorkflow_Approval_Status": "@{0}",
+                                                        "I_vWorkflow_Priority": "@{0}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Is_insert_HOURLY_pay_code_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_insert_OT_HR_pay_code_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Insert_OT_HR_employee_pay_code')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_insert_OT_HR_pay_code_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "employeepaycode",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|OT HR",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Insert_OT_HR_employee_pay_code')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Insert_OT_HR_employee_pay_code": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Insert_PTO_HR_employee_pay_code": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateEmployeePayCode",
+                                                    "storedProcedureParameters": {
+                                                        "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vACRUSTIM": "@{body('Get_pay_codes_from_GP')[0]?[4]?['ACRUSTIM']}",
+                                                        "I_vACRUVACN": "@{body('Get_pay_codes_from_GP')[0]?[4]?['ACRUVACN']}",
+                                                        "I_vPAYRCORD": "PTO HR",
+                                                        "I_vPAYPEROD": "@{body('Get_pay_codes_from_GP')[0]?[4]?['PAYPEROD']}",
+                                                        "I_vPAYUNPER": "@{body('Get_pay_codes_from_GP')[0]?[4]?['PAYUNPER']}",
+                                                        "I_vRPTASWGS": "@{body('Get_pay_codes_from_GP')[0]?[4]?['RPTASWGS']}",
+                                                        "I_vSBJTSSEC": "@{body('Get_pay_codes_from_GP')[0]?[4]?['SBJTSSEC']}",
+                                                        "I_vSBJTFDTX": "@{body('Get_pay_codes_from_GP')[0]?[4]?['SBJTFDTX']}",
+                                                        "I_vSBJTMCAR": "@{body('Get_pay_codes_from_GP')[0]?[4]?['SBJTMCAR']}",
+                                                        "I_vSBJTFUTA": "@{body('Get_pay_codes_from_GP')[0]?[4]?['SBJTFUTA']}",
+                                                        "I_vSBJTLTAX": "@{body('Get_pay_codes_from_GP')[0]?[4]?['SBJTLTAX']}",
+                                                        "I_vSBJTSTTX": "@{body('Get_pay_codes_from_GP')[0]?[4]?['SBJTSTTX']}",
+                                                        "I_vSBJTSUTA": "@{body('Get_pay_codes_from_GP')[0]?[4]?['SBJTSUTA']}",
+                                                        "I_vTipType": "@{body('Get_pay_codes_from_GP')[0]?[4]?['TipType']}",
+                                                        "I_vUseDefaultCoPayCode": "@{1}",
+                                                        "I_vW2BXLABL2": "@{body('Get_pay_codes_from_GP')[0]?[4]?['W2BXLABL2']}",
+                                                        "I_vW2BXLABL3": "@{body('Get_pay_codes_from_GP')[0]?[4]?['W2BXLABL3']}",
+                                                        "I_vW2BXLABL4": "@{body('Get_pay_codes_from_GP')[0]?[4]?['W2BXLABL4']}",
+                                                        "I_vW2BXNMBR2": "@{body('Get_pay_codes_from_GP')[0]?[4]?['W2BXNMBR2']}",
+                                                        "I_vW2BXNMBR3": "@{body('Get_pay_codes_from_GP')[0]?[4]?['W2BXNMBR3']}",
+                                                        "I_vW2BXNMBR4": "@{body('Get_pay_codes_from_GP')[0]?[4]?['W2BXNMBR4']}",
+                                                        "I_vWorkflow_Approval_Status": "@{0}",
+                                                        "I_vWorkflow_Priority": "@{0}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Is_insert_OT_HR_pay_code_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_insert_PRO_HR_pay_code_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Insert_PTO_HR_employee_pay_code')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_insert_PRO_HR_pay_code_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "employeepaycode",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|PTO HR",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Insert_PTO_HR_employee_pay_code')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Insert_PTO_HR_employee_pay_code": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Insert_RETRO_employee_pay_code": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateEmployeePayCode",
+                                                    "storedProcedureParameters": {
+                                                        "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vACRUSTIM": "@{body('Get_pay_codes_from_GP')[0]?[5]?['ACRUSTIM']}",
+                                                        "I_vACRUVACN": "@{body('Get_pay_codes_from_GP')[0]?[5]?['ACRUVACN']}",
+                                                        "I_vPAYRCORD": "RETRO",
+                                                        "I_vPAYPEROD": "@{body('Get_pay_codes_from_GP')[0]?[5]?['PAYPEROD']}",
+                                                        "I_vPAYUNPER": "@{body('Get_pay_codes_from_GP')[0]?[5]?['PAYUNPER']}",
+                                                        "I_vRPTASWGS": "@{body('Get_pay_codes_from_GP')[0]?[5]?['RPTASWGS']}",
+                                                        "I_vSBJTSSEC": "@{body('Get_pay_codes_from_GP')[0]?[5]?['SBJTSSEC']}",
+                                                        "I_vSBJTFDTX": "@{body('Get_pay_codes_from_GP')[0]?[5]?['SBJTFDTX']}",
+                                                        "I_vSBJTMCAR": "@{body('Get_pay_codes_from_GP')[0]?[5]?['SBJTMCAR']}",
+                                                        "I_vSBJTFUTA": "@{body('Get_pay_codes_from_GP')[0]?[5]?['SBJTFUTA']}",
+                                                        "I_vSBJTLTAX": "@{body('Get_pay_codes_from_GP')[0]?[5]?['SBJTLTAX']}",
+                                                        "I_vSBJTSTTX": "@{body('Get_pay_codes_from_GP')[0]?[5]?['SBJTSTTX']}",
+                                                        "I_vSBJTSUTA": "@{body('Get_pay_codes_from_GP')[0]?[5]?['SBJTSUTA']}",
+                                                        "I_vTipType": "@{body('Get_pay_codes_from_GP')[0]?[5]?['TipType']}",
+                                                        "I_vUseDefaultCoPayCode": "@{1}",
+                                                        "I_vW2BXLABL2": "@{body('Get_pay_codes_from_GP')[0]?[5]?['W2BXLABL2']}",
+                                                        "I_vW2BXLABL3": "@{body('Get_pay_codes_from_GP')[0]?[5]?['W2BXLABL3']}",
+                                                        "I_vW2BXLABL4": "@{body('Get_pay_codes_from_GP')[0]?[5]?['W2BXLABL4']}",
+                                                        "I_vW2BXNMBR2": "@{body('Get_pay_codes_from_GP')[0]?[5]?['W2BXNMBR2']}",
+                                                        "I_vW2BXNMBR4": "@{body('Get_pay_codes_from_GP')[0]?[5]?['W2BXNMBR4']}",
+                                                        "I_vWorkflow_Approval_Status": "@{0}",
+                                                        "I_vWorkflow_Priority": "@{0}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Is_insert_PRO_HR_pay_code_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_insert_RETRO_pay_code_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Insert_RETRO_employee_pay_code')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_insert_RETRO_pay_code_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "employeepaycode",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|RETRO",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Insert_RETRO_employee_pay_code')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Insert_RETRO_employee_pay_code": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Insert_TT_HR_employee_pay_code": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateEmployeePayCode",
+                                                    "storedProcedureParameters": {
+                                                        "I_vEMPLOYID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vACRUSTIM": "@{body('Get_pay_codes_from_GP')[0]?[6]?['ACRUSTIM']}",
+                                                        "I_vACRUVACN": "@{body('Get_pay_codes_from_GP')[0]?[6]?['ACRUVACN']}",
+                                                        "I_vPAYRCORD": "TT HR",
+                                                        "I_vPAYPEROD": "@{body('Get_pay_codes_from_GP')[0]?[6]?['PAYPEROD']}",
+                                                        "I_vPAYUNPER": "@{body('Get_pay_codes_from_GP')[0]?[6]?['PAYUNPER']}",
+                                                        "I_vRPTASWGS": "@{body('Get_pay_codes_from_GP')[0]?[6]?['RPTASWGS']}",
+                                                        "I_vSBJTSSEC": "@{body('Get_pay_codes_from_GP')[0]?[6]?['SBJTSSEC']}",
+                                                        "I_vSBJTFDTX": "@{body('Get_pay_codes_from_GP')[0]?[6]?['SBJTFDTX']}",
+                                                        "I_vSBJTMCAR": "@{body('Get_pay_codes_from_GP')[0]?[6]?['SBJTMCAR']}",
+                                                        "I_vSBJTFUTA": "@{body('Get_pay_codes_from_GP')[0]?[6]?['SBJTFUTA']}",
+                                                        "I_vSBJTLTAX": "@{body('Get_pay_codes_from_GP')[0]?[6]?['SBJTLTAX']}",
+                                                        "I_vSBJTSTTX": "@{body('Get_pay_codes_from_GP')[0]?[6]?['SBJTSTTX']}",
+                                                        "I_vSBJTSUTA": "@{body('Get_pay_codes_from_GP')[0]?[6]?['SBJTSUTA']}",
+                                                        "I_vTipType": "@{body('Get_pay_codes_from_GP')[0]?[6]?['TipType']}",
+                                                        "I_vUseDefaultCoPayCode": "@{1}",
+                                                        "I_vW2BXLABL2": "@{body('Get_pay_codes_from_GP')[0]?[6]?['W2BXLABL2']}",
+                                                        "I_vW2BXLABL3": "@{body('Get_pay_codes_from_GP')[0]?[6]?['W2BXLABL3']}",
+                                                        "I_vW2BXLABL4": "@{body('Get_pay_codes_from_GP')[0]?[6]?['W2BXLABL4']}",
+                                                        "I_vW2BXNMBR2": "@{body('Get_pay_codes_from_GP')[0]?[6]?['W2BXNMBR2']}",
+                                                        "I_vW2BXNMBR4": "@{body('Get_pay_codes_from_GP')[0]?[6]?['W2BXNMBR4']}",
+                                                        "I_vWorkflow_Approval_Status": "@{0}",
+                                                        "I_vWorkflow_Priority": "@{0}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Is_insert_RETRO_pay_code_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_insert_TT_HR_pay_code_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Insert_TT_HR_employee_pay_code')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_insert_TT_HR_pay_code_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "employeepaycode",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|TT HR",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Insert_TT_HR_employee_pay_code')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Insert_TT_HR_employee_pay_code": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Upsert_employee_internet_address": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "storedProcedureName": "taCreateInternetAddresses",
+                                                    "storedProcedureParameters": {
+                                                        "I_vADRSCODE": "PRIMARY",
+                                                        "I_vMaster_ID": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                        "I_vMaster_Type": "EMP",
+                                                        "I_vINET1": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['employee.emailaddress1']}"
+                                                    },
+                                                    "includeEmptyResultSets": false
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "sql-11",
+                                                    "operationId": "executeStoredProcedure",
+                                                    "serviceProviderId": "/serviceProviders/sql"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Is_insert_TT_HR_pay_code_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Is_upsert_internet_address_succeeded": {
+                                            "type": "If",
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@body('Upsert_employee_internet_address')?['outputParameters']?['@O_iErrorState']",
+                                                            "@0"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Log_upsert_internet_address_error": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "entityName": "integrationslog",
+                                                                "message": {
+                                                                    "contentData": {
+                                                                        "source": "dataverse",
+                                                                        "sourceEntity": "pics_employeebudgetdetail",
+                                                                        "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                        "target": "gppic",
+                                                                        "targetEntity": "internetaddress",
+                                                                        "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}|MAIN",
+                                                                        "timestamp": "@{utcNow()}",
+                                                                        "logLevel": "Error",
+                                                                        "message": "@{replace(trim(body('Upsert_employee_internet_address')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                                    },
+                                                                    "contentType": "@item()?['contentType']",
+                                                                    "sessionId": "econnect",
+                                                                    "correlationId": "@item()?['correlationId']"
+                                                                }
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "serviceBus",
+                                                                "operationId": "sendMessage",
+                                                                "serviceProviderId": "/serviceProviders/serviceBus"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Upsert_employee_internet_address": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        },
+                                        "Save_new_employee_id_in_CRM": {
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "referenceName": "commondataservice-1"
+                                                    }
+                                                },
+                                                "method": "patch",
+                                                "body": {
+                                                    "pics_employeenumber": "@string(body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber'])"
+                                                },
+                                                "headers": {
+                                                    "prefer": "return=representation,odata.include-annotations=*",
+                                                    "accept": "application/json;odata.metadata=full",
+                                                    "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                },
+                                                "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('contacts'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_budget_detail_message')?['contentData']?['document']?['employee.contactid']))})"
+                                            },
+                                            "runAfter": {
+                                                "Is_upsert_internet_address_succeeded": [
+                                                    "SUCCEEDED"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Log_insert_new_employee_error": {
+                                                "type": "ServiceProvider",
+                                                "inputs": {
+                                                    "parameters": {
+                                                        "entityName": "integrationslog",
+                                                        "message": {
+                                                            "contentData": {
+                                                                "source": "dataverse",
+                                                                "sourceEntity": "pics_employeebudgetdetail",
+                                                                "sourceId": "@{body('Parse_budget_detail_message')?['contentData']?['document']?['pics_employeebudgetdetailid']}",
+                                                                "target": "gppic",
+                                                                "targetEntity": "employee",
+                                                                "targetId": "@{body('Get_next_employee_number_from_GP')[0]?[0]?['nextEmployeeNumber']}",
+                                                                "timestamp": "@{utcNow()}",
+                                                                "logLevel": "Error",
+                                                                "message": "@{replace(trim(body('Insert_new_employee_in_GP')?['outputParameters']['@oErrString']), ' ', ',')}"
+                                                            },
+                                                            "contentType": "@item()?['contentType']",
+                                                            "sessionId": "econnect",
+                                                            "correlationId": "@item()?['correlationId']"
+                                                        }
+                                                    },
+                                                    "serviceProviderConfiguration": {
+                                                        "connectionName": "serviceBus",
+                                                        "operationId": "sendMessage",
+                                                        "serviceProviderId": "/serviceProviders/serviceBus"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Insert_new_employee_in_GP": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Check_for_existing_employee_in_GP": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Complete_budget_detail_message": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "messageId": "@item()?['messageId']",
+                                "lockToken": "@item()?['lockToken']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "serviceBus",
+                                "operationId": "completeMessageInSession",
+                                "serviceProviderId": "/serviceProviders/serviceBus"
+                            }
+                        },
+                        "runAfter": {
+                            "Is_existing_employee_found": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Get_messages_from_worker_budget_detail_queue": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "gpintegrations",
+                        "sessionId": "picemployeebudget",
+                        "maxMessages": 100
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 2,
+                    "frequency": "Minute"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 1
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

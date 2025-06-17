@@ -1,0 +1,987 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each_employee_message": {
+                "type": "Foreach",
+                "foreach": "@triggerBody()",
+                "actions": {
+                    "Parse_employee_message": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each_employee_message')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "contentData": {
+                                        "type": "object",
+                                        "properties": {
+                                            "initiatedOn": {
+                                                "type": "integer"
+                                            },
+                                            "messageName": {
+                                                "type": "string"
+                                            },
+                                            "logLevel": {
+                                                "type": "string"
+                                            },
+                                            "document": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "contactid": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_city": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line1": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line2": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_line3": {
+                                                        "type": "string"
+                                                    },
+                                                    "address1_postalcode": {
+                                                        "type": "string"
+                                                    },
+                                                    "birthdate": {
+                                                        "type": "string"
+                                                    },
+                                                    "birthdate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "emailaddress1": {
+                                                        "type": "string"
+                                                    },
+                                                    "fax": {
+                                                        "type": "string"
+                                                    },
+                                                    "firstname": {
+                                                        "type": "string"
+                                                    },
+                                                    "lastname": {
+                                                        "type": "string"
+                                                    },
+                                                    "middlename": {
+                                                        "type": "string"
+                                                    },
+                                                    "familystatuscode": {
+                                                        "type": "integer"
+                                                    },
+                                                    "familystatuscode_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "mobilephone": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_dateofhire": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_dateofhire_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_rehiredate": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_rehiredate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "new_rehirecomments": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_address1state": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pics_address1state_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_address1_countyid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_address1_countyid_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_employeenumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_employmentstatus": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pics_employmentstatus_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_feinholderid": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_lastdateworked": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_lastdateworked_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_ssn": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_sutastate": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pics_sutastate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_terminationdate": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_terminationdate_formatted": {
+                                                        "type": "string"
+                                                    },
+                                                    "telephone1": {
+                                                        "type": "string"
+                                                    },
+                                                    "telephone2": {
+                                                        "type": "string"
+                                                    },
+                                                    "pics_contactid": {
+                                                        "type": "string"
+                                                    },
+                                                    "county": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "pics_countyid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "pics_account": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": []
+                                                        }
+                                                    },
+                                                    "connections": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "pics_feinemployeeclientconnectionid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "pics_employeeclientid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "pics_feinnumber": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": []
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "contentType": {
+                                        "type": "string"
+                                    },
+                                    "userProperties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "request-Id": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "messageId": {
+                                        "type": "string"
+                                    },
+                                    "scheduledEnqueueTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "sessionId": {
+                                        "type": "string"
+                                    },
+                                    "correlationId": {
+                                        "type": "string"
+                                    },
+                                    "timeToLive": {
+                                        "type": "string"
+                                    },
+                                    "deliveryCount": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedSequenceNumber": {
+                                        "type": "integer"
+                                    },
+                                    "enqueuedTimeUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockedUntilUtc": {
+                                        "type": "string"
+                                    },
+                                    "lockToken": {
+                                        "type": "string"
+                                    },
+                                    "sequenceNumber": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "For_each_FEA_connection": {
+                        "type": "foreach",
+                        "foreach": "@outputs('Parse_employee_message')?['body']?['contentData']?['document']?['connections']",
+                        "actions": {
+                            "Check_for_existing_FEA_employee_in_GP": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[dbo].[UPR00100]",
+                                        "columnValuesForWhereCondition": {
+                                            "EMPLOYID": "@{items('For_each_FEA_connection')?['pics_feinnumber']}"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-8",
+                                        "operationId": "getRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    },
+                                    "retryPolicy": {
+                                        "type": "exponential",
+                                        "count": 2,
+                                        "interval": "PT20S",
+                                        "minimumInterval": "PT10S",
+                                        "maximumInterval": "PT1H"
+                                    }
+                                }
+                            },
+                            "Is_existing_FEA_employee_found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "greater": [
+                                                "@length(body('Check_for_existing_FEA_employee_in_GP'))",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Update_existing_FEA_employee_in_GP": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "storedProcedureName": "taCreateEmployee",
+                                                "storedProcedureParameters": {
+                                                    "I_vEMPLOYID": "@{items('For_each_FEA_connection')?['pics_feinnumber']}",
+                                                    "I_vBENADJDATE": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['new_rehiredate']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['new_rehiredate'], 'MM-dd-yyyy'))}",
+                                                    "I_vBRTHDATE": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['birthdate']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['birthdate'], 'MM-dd-yyyy'))}",
+                                                    "I_vDEMPINAC": "@{if(equals(body('Parse_employee_message')?['contentData']?['document']?['pics_employmentstatus'], 456010000), '01-01-1900', if(empty(body('Parse_employee_message')?['contentData']?['document']?['pics_terminationdate']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['pics_terminationdate'], 'MM-dd-yyyy')))}",
+                                                    "I_vEMPLOYMENTTYPE": "@{if(empty(string(body('Parse_employee_message')?['contentData']?['document']?['pics_employmenttype'])), 1, body('Parse_employee_message')?['contentData']?['document']?['pics_employmenttype'])}",
+                                                    "I_vFRSTNAME": "@{body('Parse_employee_message')?['contentData']?['document']?['firstname']}",
+                                                    "I_vSTRTDATE": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['new_dateofhire']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['new_dateofhire'], 'MM-dd-yyyy'))}",
+                                                    "I_vINACTIVE": "@{if(equals(body('Parse_employee_message')?['contentData']?['document']?['pics_employmentstatus'], 456010000), 0, 1)}",
+                                                    "I_vLASTDAYWORKED_I": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['pics_lastdateworked']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['pics_lastdateworked'], 'MM-dd-yyyy'))}",
+                                                    "I_vLASTNAME": "@{body('Parse_employee_message')?['contentData']?['document']?['lastname']}",
+                                                    "I_vLOCATNID": "0001",
+                                                    "I_vMARITALSTATUS": "@{if(empty(string(body('Parse_employee_message')?['contentData']?['document']?['familystatuscode'])), 3, if(equals(body('Parse_employee_message')?['contentData']?['document']?['familystatuscode'], 1), 2, if(equals(body('Parse_employee_message')?['contentData']?['document']?['familystatuscode'], 2), 1, 3)))}",
+                                                    "I_vMIDLNAME": "@{body('Parse_employee_message')?['contentData']?['document']?['middlename']}",
+                                                    "I_vPHONE1": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vPHONE2": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vPHONE3": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vRSNEMPIN": "@{if(equals(body('Parse_employee_message')?['contentData']?['document']?['pics_employmentstatus'], 456010000), null, if(empty(body('Parse_employee_message')?['contentData']?['document']?['new_rehirecomments']), 'Terminated', body('Parse_employee_message')?['contentData']?['document']?['new_rehirecomments']))}",
+                                                    "I_vSOCSCNUM": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['pics_ssn']), null, replace(body('Parse_employee_message')?['contentData']?['document']?['pics_ssn'], '-', ''))}",
+                                                    "I_vSUTASTAT": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_sutastate_formatted']}",
+                                                    "I_vADDRESS1": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line1']}",
+                                                    "I_vADDRESS2": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line2']}",
+                                                    "I_vADDRESS3": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line3']}",
+                                                    "I_vCITY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_city']}",
+                                                    "I_vCOUNTY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_county']}",
+                                                    "I_vSTATE": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                                    "I_vZIPCODE": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_postalcode']}",
+                                                    "I_vJOBTITLE": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                                    "I_vDEPRTMNT": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_feinholderid']}",
+                                                    "I_vEMPLCLAS": "FEA",
+                                                    "I_vADRSCODE": "PRIMARY"
+                                                },
+                                                "includeEmptyResultSets": false
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-8",
+                                                "operationId": "executeStoredProcedure",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            },
+                                            "retryPolicy": {
+                                                "type": "exponential",
+                                                "count": 2,
+                                                "interval": "PT20S",
+                                                "minimumInterval": "PT10S",
+                                                "maximumInterval": "PT1H"
+                                            }
+                                        }
+                                    },
+                                    "Is_update_existing_FEA_employee_succeeded": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@body('Update_existing_FEA_employee_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                        "@0"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {
+                                            "Update_existing_FEA_employee_address_in_GP": {
+                                                "type": "ServiceProvider",
+                                                "inputs": {
+                                                    "parameters": {
+                                                        "storedProcedureName": "taCreateEmployeeAddress",
+                                                        "storedProcedureParameters": {
+                                                            "I_vEMPLOYID": "@{items('For_each_FEA_connection')?['pics_feinnumber']}",
+                                                            "I_vPHONE1": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vPHONE2": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vPHONE3": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vADDRESS1": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line1']}",
+                                                            "I_vADDRESS2": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line2']}",
+                                                            "I_vADDRESS3": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line3']}",
+                                                            "I_vCITY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_city']}",
+                                                            "I_vCOUNTY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_county']}",
+                                                            "I_vSTATE": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                                            "I_vZIPCODE": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_postalcode']}",
+                                                            "I_vFAX": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['fax']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['fax'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vADRSCODE": "PRIMARY"
+                                                        },
+                                                        "includeEmptyResultSets": true
+                                                    },
+                                                    "serviceProviderConfiguration": {
+                                                        "connectionName": "sql-11",
+                                                        "operationId": "executeStoredProcedure",
+                                                        "serviceProviderId": "/serviceProviders/sql"
+                                                    },
+                                                    "retryPolicy": {
+                                                        "type": "exponential",
+                                                        "count": 2,
+                                                        "interval": "PT20S",
+                                                        "minimumInterval": "PT10S",
+                                                        "maximumInterval": "PT1H"
+                                                    }
+                                                }
+                                            },
+                                            "Is_update_existing_FEA_employee_address_succeeded": {
+                                                "type": "If",
+                                                "expression": {
+                                                    "and": [
+                                                        {
+                                                            "equals": [
+                                                                "@body('Update_existing_FEA_employee_address_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                                "@0"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "actions": {
+                                                    "Update_existing_FEA_employee_e-address_in_GP": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "storedProcedureName": "taCreateInternetAddresses",
+                                                                "storedProcedureParameters": {
+                                                                    "I_vADRSCODE": "PRIMARY",
+                                                                    "I_vMaster_ID": "@{item()?['pics_feinnumber']}",
+                                                                    "I_vMaster_Type": "EMP",
+                                                                    "I_vINET1": "@{body('Parse_employee_message')?['contentData']?['document']?['emailaddress1']}"
+                                                                },
+                                                                "includeEmptyResultSets": false
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "sql-8",
+                                                                "operationId": "executeStoredProcedure",
+                                                                "serviceProviderId": "/serviceProviders/sql"
+                                                            },
+                                                            "retryPolicy": {
+                                                                "type": "exponential",
+                                                                "count": 2,
+                                                                "interval": "PT20S",
+                                                                "minimumInterval": "PT10S",
+                                                                "maximumInterval": "PT1H"
+                                                            }
+                                                        }
+                                                    },
+                                                    "Is_update_existing_FEA_employee_e-address_succeeded": {
+                                                        "type": "If",
+                                                        "expression": {
+                                                            "and": [
+                                                                {
+                                                                    "equals": [
+                                                                        "@body('Update_existing_FEA_employee_e-address_in_GP')?['outputParameters']?['O_iErrorState']",
+                                                                        "@0"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actions": {},
+                                                        "else": {
+                                                            "actions": {
+                                                                "Log_update_existing_FEA_employee_e-address_error": {
+                                                                    "type": "ServiceProvider",
+                                                                    "inputs": {
+                                                                        "parameters": {
+                                                                            "entityName": "integrationslog",
+                                                                            "message": {
+                                                                                "contentData": {
+                                                                                    "workflowName": "@{workflow().name}",
+                                                                                    "runId": "@{workflow().run.id}",
+                                                                                    "source": "dataverse",
+                                                                                    "sourceEntity": "contact",
+                                                                                    "sourceId": "@{body('Parse_employee_message')?['contentData']?['document']?['contactid']}",
+                                                                                    "target": "gppic",
+                                                                                    "targetEntity": "employee",
+                                                                                    "targetId": "@{items('For_each_FEA_connection')?['pics_feinnumber']}",
+                                                                                    "timestamp": "@{utcNow()}",
+                                                                                    "logLevel": "Error",
+                                                                                    "message": "@{replace(trim(body('Update_existing_FEA_employee_e-address_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                                },
+                                                                                "contentType": "@item()?['contentType']",
+                                                                                "sessionId": "econnect",
+                                                                                "correlationId": "@body('Parse_employee_message')?['correlationId']"
+                                                                            }
+                                                                        },
+                                                                        "serviceProviderConfiguration": {
+                                                                            "connectionName": "serviceBus",
+                                                                            "operationId": "sendMessage",
+                                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {
+                                                            "Update_existing_FEA_employee_e-address_in_GP": [
+                                                                "SUCCEEDED"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "else": {
+                                                    "actions": {
+                                                        "Log_update_existing_FEA_employee_address_error": {
+                                                            "type": "ServiceProvider",
+                                                            "inputs": {
+                                                                "parameters": {
+                                                                    "entityName": "integrationslog",
+                                                                    "message": {
+                                                                        "contentData": {
+                                                                            "workflowName": "@{workflow().name}",
+                                                                            "runId": "@{workflow().run.id}",
+                                                                            "source": "dataverse",
+                                                                            "sourceEntity": "contact",
+                                                                            "sourceId": "@{body('Parse_employee_message')?['contentData']?['document']?['contactid']}",
+                                                                            "target": "gppic",
+                                                                            "targetEntity": "employee",
+                                                                            "targetId": "@{items('For_each_FEA_connection')?['pics_feinnumber']}",
+                                                                            "timestamp": "@{utcNow()}",
+                                                                            "logLevel": "Error",
+                                                                            "message": "@{replace(trim(body('Update_existing_FEA_employee_address_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                        },
+                                                                        "contentType": "@item()?['contentType']",
+                                                                        "sessionId": "econnect",
+                                                                        "correlationId": "@body('Parse_employee_message')?['correlationId']"
+                                                                    }
+                                                                },
+                                                                "serviceProviderConfiguration": {
+                                                                    "connectionName": "serviceBus",
+                                                                    "operationId": "sendMessage",
+                                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "runAfter": {
+                                                    "Update_existing_FEA_employee_address_in_GP": [
+                                                        "SUCCEEDED"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "else": {
+                                            "actions": {
+                                                "Log_update_existing_FEA_employee_error": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "entityName": "integrationslog",
+                                                            "message": {
+                                                                "contentData": {
+                                                                    "workflowName": "@{workflow().name}",
+                                                                    "runId": "@{workflow().run.id}",
+                                                                    "source": "dataverse",
+                                                                    "sourceEntity": "contact",
+                                                                    "sourceId": "@{body('Parse_employee_message')?['contentData']?['document']?['contactid']}",
+                                                                    "target": "gppic",
+                                                                    "targetEntity": "employee",
+                                                                    "targetId": "@{items('For_each_FEA_connection')?['pics_feinnumber']}",
+                                                                    "timestamp": "@{utcNow()}",
+                                                                    "logLevel": "Error",
+                                                                    "message": "@{replace(trim(body('Update_existing_FEA_employee_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                },
+                                                                "contentType": "@item()?['contentType']",
+                                                                "sessionId": "econnect",
+                                                                "correlationId": "@body('Parse_employee_message')?['correlationId']"
+                                                            }
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "serviceBus",
+                                                            "operationId": "sendMessage",
+                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Update_existing_FEA_employee_in_GP": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {}
+                                },
+                                "runAfter": {
+                                    "Check_for_existing_FEA_employee_in_GP": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "If_Has_Employee_Id": [
+                                "SUCCEEDED"
+                            ]
+                        },
+                        "runtimeConfiguration": {
+                            "concurrency": {
+                                "repetitions": 1
+                            }
+                        }
+                    },
+                    "Complete_the_message_in_a_session": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "messageId": "@item()?['messageId']",
+                                "lockToken": "@item()?['lockToken']"
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "serviceBus",
+                                "operationId": "completeMessageInSession",
+                                "serviceProviderId": "/serviceProviders/serviceBus"
+                            }
+                        },
+                        "runAfter": {
+                            "For_each_FEA_connection": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "If_Has_Employee_Id": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "not": {
+                                        "equals": [
+                                            "@body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']",
+                                            "@null"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Check_for_existing_PIC_employee_in_GP": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "tableName": "[dbo].[UPR00100]",
+                                        "columnValuesForWhereCondition": {
+                                            "EMPLOYID": "@body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']"
+                                        }
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-11",
+                                        "operationId": "getRows",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    },
+                                    "retryPolicy": {
+                                        "type": "exponential",
+                                        "count": 2,
+                                        "interval": "PT20S",
+                                        "minimumInterval": "PT10S",
+                                        "maximumInterval": "PT1H"
+                                    }
+                                }
+                            },
+                            "Is_existing_PIC_employee_found": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "greater": [
+                                                "@length(body('Check_for_existing_PIC_employee_in_GP'))",
+                                                "@0"
+                                            ]
+                                        },
+                                        {
+                                            "equals": [
+                                                "@empty(body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber'])",
+                                                "@false"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Update_existing_PIC_employee_in_GP": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "storedProcedureName": "taCreateEmployee",
+                                                "storedProcedureParameters": {
+                                                    "I_vEMPLOYID": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']}",
+                                                    "I_vBENADJDATE": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['new_rehiredate']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['new_rehiredate'], 'MM-dd-yyyy'))}",
+                                                    "I_vBRTHDATE": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['birthdate']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['birthdate'], 'MM-dd-yyyy'))}",
+                                                    "I_vDEMPINAC": "@{if(equals(body('Parse_employee_message')?['contentData']?['document']?['pics_employmentstatus'], 456010000), '01-01-1900', if(empty(body('Parse_employee_message')?['contentData']?['document']?['pics_terminationdate']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['pics_terminationdate'], 'MM-dd-yyyy')))}",
+                                                    "I_vEMPLOYMENTTYPE": "@{if(empty(string(body('Parse_employee_message')?['contentData']?['document']?['pics_employmenttype'])), 1, body('Parse_employee_message')?['contentData']?['document']?['pics_employmenttype'])}",
+                                                    "I_vFRSTNAME": "@{body('Parse_employee_message')?['contentData']?['document']?['firstname']}",
+                                                    "I_vSTRTDATE": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['new_dateofhire']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['new_dateofhire'], 'MM-dd-yyyy'))}",
+                                                    "I_vINACTIVE": "@{if(equals(body('Parse_employee_message')?['contentData']?['document']?['pics_employmentstatus'], 456010000), 0, 1)}",
+                                                    "I_vLASTDAYWORKED_I": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['pics_lastdateworked']), '01-01-1900', formatDateTime(body('Parse_employee_message')?['contentData']?['document']?['pics_lastdateworked'], 'MM-dd-yyyy'))}",
+                                                    "I_vLASTNAME": "@{body('Parse_employee_message')?['contentData']?['document']?['lastname']}",
+                                                    "I_vLOCATNID": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['county.pics_account']), '', substring(body('Parse_employee_message')?['contentData']?['document']?['county.pics_account'], sub(length(body('Parse_employee_message')?['contentData']?['document']?['county.pics_account']), 4)))}",
+                                                    "I_vMARITALSTATUS": "@{if(empty(string(body('Parse_employee_message')?['contentData']?['document']?['familystatuscode'])), 3, if(equals(body('Parse_employee_message')?['contentData']?['document']?['familystatuscode'], 1), 2, if(equals(body('Parse_employee_message')?['contentData']?['document']?['familystatuscode'], 2), 1, 3)))}",
+                                                    "I_vMIDLNAME": "@{body('Parse_employee_message')?['contentData']?['document']?['middlename']}",
+                                                    "I_vPHONE1": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vPHONE2": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vPHONE3": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                                    "I_vRSNEMPIN": "@{if(equals(body('Parse_employee_message')?['contentData']?['document']?['pics_employmentstatus'], 456010000), null, if(empty(body('Parse_employee_message')?['contentData']?['document']?['new_rehirecomments']), 'Terminated', body('Parse_employee_message')?['contentData']?['document']?['new_rehirecomments']))}",
+                                                    "I_vSOCSCNUM": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['pics_ssn']), null, replace(body('Parse_employee_message')?['contentData']?['document']?['pics_ssn'], '-', ''))}",
+                                                    "I_vSUTASTAT": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_sutastate_formatted']}",
+                                                    "I_vADDRESS1": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line1']}",
+                                                    "I_vADDRESS2": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line2']}",
+                                                    "I_vADDRESS3": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line3']}",
+                                                    "I_vCITY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_city']}",
+                                                    "I_vCOUNTY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_county']}",
+                                                    "I_vSTATE": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                                    "I_vZIPCODE": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_postalcode']}",
+                                                    "I_vJOBTITLE": "PICS",
+                                                    "I_vDEPRTMNT": "PICS",
+                                                    "I_vEMPLCLAS": "PICS",
+                                                    "I_vADRSCODE": "PRIMARY"
+                                                },
+                                                "includeEmptyResultSets": false
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-11",
+                                                "operationId": "executeStoredProcedure",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            },
+                                            "retryPolicy": {
+                                                "type": "exponential",
+                                                "count": 2,
+                                                "interval": "PT20S",
+                                                "minimumInterval": "PT10S",
+                                                "maximumInterval": "PT1H"
+                                            }
+                                        }
+                                    },
+                                    "Is_update_existing_PIC_employee_succeeded": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@body('Update_existing_PIC_employee_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                        "@0"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {
+                                            "Update_existing_PIC_employee_address_in_GP": {
+                                                "type": "ServiceProvider",
+                                                "inputs": {
+                                                    "parameters": {
+                                                        "storedProcedureName": "taCreateEmployeeAddress",
+                                                        "storedProcedureParameters": {
+                                                            "I_vEMPLOYID": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']}",
+                                                            "I_vPHONE1": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone2']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone2'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vPHONE2": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone1']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone1'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vPHONE3": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['telephone3']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['telephone3'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vADDRESS1": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line1']}",
+                                                            "I_vADDRESS2": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line2']}",
+                                                            "I_vADDRESS3": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_line3']}",
+                                                            "I_vCITY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_city']}",
+                                                            "I_vCOUNTY": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_county']}",
+                                                            "I_vSTATE": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_address1state_formatted']}",
+                                                            "I_vZIPCODE": "@{body('Parse_employee_message')?['contentData']?['document']?['address1_postalcode']}",
+                                                            "I_vFAX": "@{if(empty(body('Parse_employee_message')?['contentData']?['document']?['fax']), '', replace(replace(replace(replace(body('Parse_employee_message')?['contentData']?['document']?['fax'],'-',''),'(',''),')',''),'x',''))}",
+                                                            "I_vADRSCODE": "PRIMARY"
+                                                        },
+                                                        "includeEmptyResultSets": true
+                                                    },
+                                                    "serviceProviderConfiguration": {
+                                                        "connectionName": "sql-11",
+                                                        "operationId": "executeStoredProcedure",
+                                                        "serviceProviderId": "/serviceProviders/sql"
+                                                    }
+                                                }
+                                            },
+                                            "Is_update_existing_PIC_employee_address_succeeded": {
+                                                "type": "If",
+                                                "expression": {
+                                                    "and": [
+                                                        {
+                                                            "equals": [
+                                                                "@body('Update_existing_PIC_employee_address_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                                "@0"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "actions": {
+                                                    "Update_existing_PIC_employee_e-address_in_GP": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "storedProcedureName": "taCreateInternetAddresses",
+                                                                "storedProcedureParameters": {
+                                                                    "I_vADRSCODE": "PRIMARY",
+                                                                    "I_vMaster_ID": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']}",
+                                                                    "I_vMaster_Type": "EMP",
+                                                                    "I_vINET1": "@{body('Parse_employee_message')?['contentData']?['document']?['emailaddress1']}"
+                                                                },
+                                                                "includeEmptyResultSets": false
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "sql-11",
+                                                                "operationId": "executeStoredProcedure",
+                                                                "serviceProviderId": "/serviceProviders/sql"
+                                                            },
+                                                            "retryPolicy": {
+                                                                "type": "exponential",
+                                                                "count": 2,
+                                                                "interval": "PT20S",
+                                                                "minimumInterval": "PT10S",
+                                                                "maximumInterval": "PT1H"
+                                                            }
+                                                        }
+                                                    },
+                                                    "Is_update_existing_PIC_employee_e-address_succeeded": {
+                                                        "type": "If",
+                                                        "expression": {
+                                                            "and": [
+                                                                {
+                                                                    "equals": [
+                                                                        "@body('Update_existing_PIC_employee_e-address_in_GP')?['outputParameters']?['@O_iErrorState']",
+                                                                        "@0"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actions": {},
+                                                        "else": {
+                                                            "actions": {
+                                                                "Log_update_existing_PIC_employee_e-address_error": {
+                                                                    "type": "ServiceProvider",
+                                                                    "inputs": {
+                                                                        "parameters": {
+                                                                            "entityName": "integrationslog",
+                                                                            "message": {
+                                                                                "contentData": {
+                                                                                    "workflowName": "@{workflow().name}",
+                                                                                    "runId": "@{workflow().run.id}",
+                                                                                    "source": "dataverse",
+                                                                                    "sourceEntity": "contact",
+                                                                                    "sourceId": "@{body('Parse_employee_message')?['contentData']?['document']?['contactid']}",
+                                                                                    "target": "gppic",
+                                                                                    "targetEntity": "employee",
+                                                                                    "targetId": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']}",
+                                                                                    "timestamp": "@{utcNow()}",
+                                                                                    "logLevel": "Error",
+                                                                                    "message": "@{replace(trim(body('Update_existing_PIC_employee_e-address_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                                },
+                                                                                "contentType": "@item()?['contentType']",
+                                                                                "sessionId": "econnect",
+                                                                                "correlationId": "@body('Parse_employee_message')?['correlationId']"
+                                                                            }
+                                                                        },
+                                                                        "serviceProviderConfiguration": {
+                                                                            "connectionName": "serviceBus",
+                                                                            "operationId": "sendMessage",
+                                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {
+                                                            "Update_existing_PIC_employee_e-address_in_GP": [
+                                                                "SUCCEEDED"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "else": {
+                                                    "actions": {
+                                                        "Log_update_existing_PIC_employee_address_error": {
+                                                            "type": "ServiceProvider",
+                                                            "inputs": {
+                                                                "parameters": {
+                                                                    "entityName": "integrationslog",
+                                                                    "message": {
+                                                                        "contentData": {
+                                                                            "workflowName": "@{workflow().name}",
+                                                                            "runId": "@{workflow().run.id}",
+                                                                            "source": "dataverse",
+                                                                            "sourceEntity": "contact",
+                                                                            "sourceId": "@{body('Parse_employee_message')?['contentData']?['document']?['contactid']}",
+                                                                            "target": "gppic",
+                                                                            "targetEntity": "employee",
+                                                                            "targetId": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']}",
+                                                                            "timestamp": "@{utcNow()}",
+                                                                            "logLevel": "Error",
+                                                                            "message": "@{replace(trim(body('Update_existing_PIC_employee_address_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                        },
+                                                                        "contentType": "@item()?['contentType']",
+                                                                        "sessionId": "econnect",
+                                                                        "correlationId": "@body('Parse_employee_message')?['correlationId']"
+                                                                    }
+                                                                },
+                                                                "serviceProviderConfiguration": {
+                                                                    "connectionName": "serviceBus",
+                                                                    "operationId": "sendMessage",
+                                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "runAfter": {
+                                                    "Update_existing_PIC_employee_address_in_GP": [
+                                                        "SUCCEEDED"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "else": {
+                                            "actions": {
+                                                "Log_update_existing_PIC_employee_error": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "entityName": "integrationslog",
+                                                            "message": {
+                                                                "contentData": {
+                                                                    "workflowName": "@{workflow().name}",
+                                                                    "runId": "@{workflow().run.id}",
+                                                                    "source": "dataverse",
+                                                                    "sourceEntity": "contact",
+                                                                    "sourceId": "@{body('Parse_employee_message')?['contentData']?['document']?['contactid']}",
+                                                                    "target": "gppic",
+                                                                    "targetEntity": "employee",
+                                                                    "targetId": "@{body('Parse_employee_message')?['contentData']?['document']?['pics_employeenumber']}",
+                                                                    "timestamp": "@{utcNow()}",
+                                                                    "logLevel": "Error",
+                                                                    "message": "@{replace(trim(body('Update_existing_PIC_employee_in_GP')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                },
+                                                                "contentType": "@item()?['contentType']",
+                                                                "sessionId": "econnect",
+                                                                "correlationId": "@body('Parse_employee_message')?['correlationId']"
+                                                            }
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "serviceBus",
+                                                            "operationId": "sendMessage",
+                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Update_existing_PIC_employee_in_GP": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {}
+                                },
+                                "runAfter": {
+                                    "Check_for_existing_PIC_employee_in_GP": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Parse_employee_message": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {},
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "repetitions": 1
+                    }
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Get_new_messages_from_employee_queue": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "gpintegrations",
+                        "sessionId": "employee",
+                        "maxMessages": 100
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 5,
+                    "frequency": "Second",
+                    "startTime": "2025-4-24T08:33:00",
+                    "timeZone": "Mountain Standard Time"
+                },
+                "conditions": [],
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 1
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

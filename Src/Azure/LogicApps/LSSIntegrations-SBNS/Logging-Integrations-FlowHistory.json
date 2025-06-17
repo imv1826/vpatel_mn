@@ -1,0 +1,128 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Message_is_Valid": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "not": {
+                                "equals": [
+                                    "@triggerBody()?['contentData']?['flowName']",
+                                    "@null"
+                                ]
+                            }
+                        },
+                        {
+                            "not": {
+                                "equals": [
+                                    "@triggerBody()?['contentData']?['runId']",
+                                    "@null"
+                                ]
+                            }
+                        },
+                        {
+                            "not": {
+                                "equals": [
+                                    "@triggerBody()?['contentData']?['startTime']",
+                                    "@null"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "actions": {
+                    "Insert_New_Flow_History_Log": {
+                        "type": "ServiceProvider",
+                        "inputs": {
+                            "parameters": {
+                                "tableName": "LogsIntegration",
+                                "entity": {
+                                    "PartitionKey": "@join(createArray(triggerBody()?['contentData']?['flowName'], triggerBody()?['contentData']?['runId']), '-')",
+                                    "RowKey": "@triggerBody()?['contentData']?['actionId']",
+                                    "Timestamp": "@triggerBody()?['contentData']?['startTime']",
+                                    "Name": "@triggerBody()?['contentData']?['name']",
+                                    "Status": "@triggerBody()?['contentData']?['status']",
+                                    "ErrorMessage": "@triggerBody()?['contentData']?['errorMessage']",
+                                    "RunStartTime": "@triggerBody()?['contentData']?['runStartTime']",
+                                    "EndTime": "@triggerBody()?['contentData']?['endTime']",
+                                    "Inputs": "@triggerBody()?['contentData']?['inputs']",
+                                    "Outputs": "@triggerBody()?['contentData']?['outputs']",
+                                    "Source": "@triggerBody()?['contentData']?['source']",
+                                    "SourceEntity": "@triggerBody()?['contentData']?['sourceEntity']",
+                                    "SourceId": "@triggerBody()?['contentData']?['sourceId']",
+                                    "Target": "@triggerBody()?['contentData']?['target']",
+                                    "TargetEntity": "@triggerBody()?['contentData']?['targetEntity']",
+                                    "TargetId": "@triggerBody()?['contentData']?['targetId']"
+                                },
+                                "failIfEntityExists": true
+                            },
+                            "serviceProviderConfiguration": {
+                                "connectionName": "azureTables-2",
+                                "operationId": "upsertEntity",
+                                "serviceProviderId": "/serviceProviders/azureTables"
+                            }
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Complete_the_message_in_the_'flowrunaction'_session": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Complete_the_message_in_the_'flowrunaction'_session": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "messageId": "@triggerBody()?['messageId']",
+                        "lockToken": "@triggerBody()?['lockToken']"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "completeMessageInSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "On_new_messages_from_'integrationslog'_queue_session_'flowrunaction'": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "integrationslog",
+                        "sessionId": "flowrunaction",
+                        "maxMessages": 10
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 5,
+                    "frequency": "Second",
+                    "timeZone": "Mountain Standard Time",
+                    "startTime": "2025-04-01T04:00:00Z"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 10
+                    }
+                },
+                "splitOn": "@triggerOutputs()?['body']"
+            }
+        }
+    },
+    "kind": "Stateful"
+}

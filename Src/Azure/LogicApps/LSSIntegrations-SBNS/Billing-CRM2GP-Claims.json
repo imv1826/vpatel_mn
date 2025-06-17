@@ -1,0 +1,799 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Get_claims_from_staging_database": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "select 100000001 as new_gpcompany, '23f4396a-0497-ef11-a8c1-00155d015159' as po_consolidateclaimsid, '101255' as batchid, '70610' as pics_gpfeaaccount, '70610' as pics_gppicsaccount,\n\t'7650' as pics_expenseaccount, '4521' as pics_revenueaccount, '0002' as countyaccount, 12344.83 as totalamount\nunion all\nselect 100000001 as new_gpcompany, '23f4396a-0497-ef11-a8c1-00155d015159' as po_consolidateclaimsid, '101255' as batchid, '70610' as pics_gpfeaaccount, '70610' as pics_gppicsaccount,\n\t'7670' as pics_expenseaccount, '4521' as pics_revenueaccount, '0002' as countyaccount, 2375.02 as totalamount\nunion all\nselect 100000001 as new_gpcompany, '23f4396a-0497-ef11-a8c1-00155d015159' as po_consolidateclaimsid, '101255' as batchid, '70610' as pics_gpfeaaccount, '70610' as pics_gppicsaccount,\n\t'7650' as pics_expenseaccount, '4521' as pics_revenueaccount, '0019' as countyaccount, 3615.98 as totalamount"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Parse_claims": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@if(empty(body('Get_claims_from_staging_database')), null, body('Get_claims_from_staging_database')[0])",
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "new_gpcompany": {
+                                    "type": "integer"
+                                },
+                                "po_consolidateclaimsid": {
+                                    "type": "string"
+                                },
+                                "batchid": {
+                                    "type": "string"
+                                },
+                                "pics_gpfeaaccount": {
+                                    "type": "string"
+                                },
+                                "pics_gppicsaccount": {
+                                    "type": "string"
+                                },
+                                "pics_expenseaccount": {
+                                    "type": "string"
+                                },
+                                "pics_revenueaccount": {
+                                    "type": "string"
+                                },
+                                "countyaccount": {
+                                    "type": "string"
+                                },
+                                "totalamount": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "new_gpcompany",
+                                "batchid",
+                                "pics_gpfeaaccount",
+                                "pics_gppicsaccount",
+                                "pics_expenseaccount",
+                                "pics_revenueaccount",
+                                "countyaccount",
+                                "totalamount"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Get_claims_from_staging_database": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "For_each_claim": {
+                "type": "foreach",
+                "foreach": "@outputs('Parse_claims')['body']",
+                "actions": {
+                    "Is_PICS_claim": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@item()['new_gpcompany']",
+                                        "@100000000"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Get_next_PICS_GL_number": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "storedProcedureName": "glGetNextJournalEntry",
+                                        "storedProcedureParameters": {
+                                            "l_tINCheckWORKFiles": "@{1}",
+                                            "I_iSQLSessionID": "@{0}",
+                                            "IO_iOUTJournalEntry": "@{0}"
+                                        },
+                                        "includeEmptyResultSets": false
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-11",
+                                        "operationId": "executeStoredProcedure",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Is_get_next_PICS_GL_number_succeeded": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@body('Get_next_PICS_GL_number')?['outputParameters']?['@O_iErrorState']",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Insert_PICS_GL_debit_transaction_line": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "storedProcedureName": "taGLTransactionLineInsert",
+                                                "storedProcedureParameters": {
+                                                    "I_vBACHNUMB": "@{item()['batchid']}",
+                                                    "I_vDEBITAMT": "@{item()['totalamount']}",
+                                                    "I_vACTNUMST": "@{concat(item()['pics_gppicsaccount'], '-1205-0000')}",
+                                                    "I_vJRNENTRY": "@{body('Get_next_PICS_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                    "I_vCRDTAMNT": "@{0}"
+                                                },
+                                                "includeEmptyResultSets": false
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-11",
+                                                "operationId": "executeStoredProcedure",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        }
+                                    },
+                                    "Is_insert_PICS_GL_debit_transaction_succeeded": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@body('Insert_PICS_GL_debit_transaction_line')?['outputParameters']?['@O_iErrorState']",
+                                                        "@0"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {
+                                            "Insert_PICS_GL_credit_transaction_line": {
+                                                "type": "ServiceProvider",
+                                                "inputs": {
+                                                    "parameters": {
+                                                        "storedProcedureName": "taGLTransactionLineInsert",
+                                                        "storedProcedureParameters": {
+                                                            "I_vBACHNUMB": "@{item()['batchid']}",
+                                                            "I_vCRDTAMNT": "@{item()['totalamount']}",
+                                                            "I_vACTNUMST": "@{concat(item()['pics_gppicsaccount'], '-', item()['pics_revenueaccount'], '-0000')}",
+                                                            "I_vJRNENTRY": "@{body('Get_next_PICS_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                            "I_vDEBITAMT": "@{0}"
+                                                        },
+                                                        "includeEmptyResultSets": false
+                                                    },
+                                                    "serviceProviderConfiguration": {
+                                                        "connectionName": "sql-11",
+                                                        "operationId": "executeStoredProcedure",
+                                                        "serviceProviderId": "/serviceProviders/sql"
+                                                    }
+                                                }
+                                            },
+                                            "Is_insert_PICS_GL_credit_transaction_succeeded": {
+                                                "type": "If",
+                                                "expression": {
+                                                    "and": [
+                                                        {
+                                                            "equals": [
+                                                                "@body('Insert_PICS_GL_credit_transaction_line')?['outputParameters']?['@O_iErrorState']",
+                                                                "@0"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "actions": {
+                                                    "Insert_PICS_GL_transaction_header": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "storedProcedureName": "taGLTransactionHeaderInsert",
+                                                                "storedProcedureParameters": {
+                                                                    "I_vAdjustment_Transaction": "@{0}",
+                                                                    "I_vCURNCYID": "Z-US$",
+                                                                    "I_vLedger_ID": "@{1}",
+                                                                    "I_vREFRENCE": "@{item()['batchid']}",
+                                                                    "I_vSOURCDOC": "GJ",
+                                                                    "I_vTRXDATE": "@{formatDateTime(utcNow(), 'MM-dd-yyyy')}",
+                                                                    "I_vTRXTYPE": "@{0}",
+                                                                    "I_vJRNENTRY": "@{body('Get_next_PICS_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                                    "I_vBACHNUMB": "@{item()['batchid']}"
+                                                                },
+                                                                "includeEmptyResultSets": false
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "sql-11",
+                                                                "operationId": "executeStoredProcedure",
+                                                                "serviceProviderId": "/serviceProviders/sql"
+                                                            }
+                                                        }
+                                                    },
+                                                    "Is_insert_PICS_GL_transaction_header_succeeded": {
+                                                        "type": "If",
+                                                        "expression": {
+                                                            "and": [
+                                                                {
+                                                                    "equals": [
+                                                                        "@body('Insert_PICS_GL_transaction_header')?['outputParameters']?['@O_iErrorState']",
+                                                                        "@0"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actions": {
+                                                            "Update_PICS_consolidate_claims_record_in_CRM": {
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "referenceName": "commondataservice-1"
+                                                                        }
+                                                                    },
+                                                                    "method": "patch",
+                                                                    "body": {
+                                                                        "statuscode": 456010000
+                                                                    },
+                                                                    "headers": {
+                                                                        "prefer": "return=representation,odata.include-annotations=*",
+                                                                        "accept": "application/json;odata.metadata=full",
+                                                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                                    },
+                                                                    "path": "/api/data/v9.1/@{encodeURIComponent('po_consolidateclaimses')}(@{encodeURIComponent(item()?['po_consolidateclaimsid'])})"
+                                                                }
+                                                            }
+                                                        },
+                                                        "else": {
+                                                            "actions": {
+                                                                "Log_insert_PICS_GL_transaction_header_error": {
+                                                                    "type": "ServiceProvider",
+                                                                    "inputs": {
+                                                                        "parameters": {
+                                                                            "entityName": "integrationslog",
+                                                                            "message": {
+                                                                                "contentData": {
+                                                                                    "workflowName": "@{workflow().name}",
+                                                                                    "runId": "@{workflow().run.name}",
+                                                                                    "source": "dataverse",
+                                                                                    "sourceEntity": "po_consolidateclaims",
+                                                                                    "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                                                    "target": "gppics",
+                                                                                    "targetEntity": "gltransactionheader",
+                                                                                    "targetId": "@{body('Get_next_PICS_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                                                    "timestamp": "@{utcNow()}",
+                                                                                    "logLevel": "Error",
+                                                                                    "message": "@{replace(trim(body('Insert_PICS_GL_transaction_header')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                                },
+                                                                                "contentType": "@item()?['contentType']",
+                                                                                "sessionId": "econnect",
+                                                                                "correlationId": "@item()['batchid']"
+                                                                            }
+                                                                        },
+                                                                        "serviceProviderConfiguration": {
+                                                                            "connectionName": "serviceBus",
+                                                                            "operationId": "sendMessage",
+                                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {
+                                                            "Insert_PICS_GL_transaction_header": [
+                                                                "SUCCEEDED"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "else": {
+                                                    "actions": {
+                                                        "Log_insert_PICS_GL_credit_transaction_line_error": {
+                                                            "type": "ServiceProvider",
+                                                            "inputs": {
+                                                                "parameters": {
+                                                                    "entityName": "integrationslog",
+                                                                    "message": {
+                                                                        "contentData": {
+                                                                            "workflowName": "@{workflow().name}",
+                                                                            "runId": "@{workflow().run.name}",
+                                                                            "source": "dataverse",
+                                                                            "sourceEntity": "po_consolidateclaims",
+                                                                            "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                                            "target": "gppics",
+                                                                            "targetEntity": "gltransactionline",
+                                                                            "targetId": "@{body('Get_next_PICS_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}|CREDIT",
+                                                                            "timestamp": "@{utcNow()}",
+                                                                            "logLevel": "Error",
+                                                                            "message": "@{replace(trim(body('Insert_PICS_GL_credit_transaction_line')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                        },
+                                                                        "contentType": "@item()?['contentType']",
+                                                                        "sessionId": "econnect",
+                                                                        "correlationId": "@item()['batchid']"
+                                                                    }
+                                                                },
+                                                                "serviceProviderConfiguration": {
+                                                                    "connectionName": "serviceBus",
+                                                                    "operationId": "sendMessage",
+                                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "runAfter": {
+                                                    "Insert_PICS_GL_credit_transaction_line": [
+                                                        "SUCCEEDED"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "else": {
+                                            "actions": {
+                                                "Log_insert_PICS_GL_debit_transaction_line_error": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "entityName": "integrationslog",
+                                                            "message": {
+                                                                "contentData": {
+                                                                    "workflowName": "@{workflow().name}",
+                                                                    "runId": "@{workflow().run.name}",
+                                                                    "source": "dataverse",
+                                                                    "sourceEntity": "po_consolidateclaims",
+                                                                    "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                                    "target": "gppics",
+                                                                    "targetEntity": "gltransactionline",
+                                                                    "targetId": "@{body('Get_next_PICS_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}|DEBIT",
+                                                                    "timestamp": "@{utcNow()}",
+                                                                    "logLevel": "Error",
+                                                                    "message": "@{replace(trim(body('Insert_PICS_GL_debit_transaction_line')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                },
+                                                                "contentType": "@item()?['contentType']",
+                                                                "sessionId": "econnect",
+                                                                "correlationId": "@item()['batchid']"
+                                                            }
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "serviceBus",
+                                                            "operationId": "sendMessage",
+                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Insert_PICS_GL_debit_transaction_line": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Log_get_next_PICS_GL_number_error": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "entityName": "integrationslog",
+                                                    "message": {
+                                                        "contentData": {
+                                                            "workflowName": "@{workflow().name}",
+                                                            "runId": "@{workflow().run.name}",
+                                                            "source": "dataverse",
+                                                            "sourceEntity": "po_consolidateclaims",
+                                                            "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                            "target": "gppics",
+                                                            "targetEntity": "glGetNextJournalEntry",
+                                                            "targetId": "",
+                                                            "timestamp": "@{utcNow()}",
+                                                            "logLevel": "Error",
+                                                            "message": "Error getting next GL transaction number"
+                                                        },
+                                                        "contentType": "@item()?['contentType']",
+                                                        "sessionId": "logger",
+                                                        "correlationId": "@item()['batchid']"
+                                                    }
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "serviceBus",
+                                                    "operationId": "sendMessage",
+                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Get_next_PICS_GL_number": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        }
+                    },
+                    "Is_FEA_claim": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@item()['new_gpcompany']",
+                                        "@100000001"
+                                    ]
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Get_next_FEA_GL_number": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "storedProcedureName": "glGetNextJournalEntry",
+                                        "storedProcedureParameters": {
+                                            "l_tINCheckWORKFiles": "@{1}",
+                                            "I_iSQLSessionID": "@{0}",
+                                            "IO_iOUTJournalEntry": "@{0}"
+                                        },
+                                        "includeEmptyResultSets": false
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "sql-8",
+                                        "operationId": "executeStoredProcedure",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            },
+                            "Is_get_next_FEA_GL_number_succeeded": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@body('Get_next_FEA_GL_number')?['outputParameters']?['@O_iErrorState']",
+                                                "@0"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Insert_FEA_GL_debit_transaction_line": {
+                                        "type": "ServiceProvider",
+                                        "inputs": {
+                                            "parameters": {
+                                                "storedProcedureName": "taGLTransactionLineInsert",
+                                                "storedProcedureParameters": {
+                                                    "I_vBACHNUMB": "@{item()['batchid']}",
+                                                    "I_vDEBITAMT": "@{item()['totalamount']}",
+                                                    "I_vACTNUMST": "@{concat(item()['pics_gpfeaaccount'], '-1205-0000')}",
+                                                    "I_vJRNENTRY": "@{body('Get_next_FEA_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                    "I_vCRDTAMNT": "@{0}"
+                                                },
+                                                "includeEmptyResultSets": false
+                                            },
+                                            "serviceProviderConfiguration": {
+                                                "connectionName": "sql-8",
+                                                "operationId": "executeStoredProcedure",
+                                                "serviceProviderId": "/serviceProviders/sql"
+                                            }
+                                        }
+                                    },
+                                    "Is_insert_FEA_GL_debit_transaction_succeeded": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@body('Insert_FEA_GL_debit_transaction_line')?['outputParameters']?['@O_iErrorState']",
+                                                        "@0"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {
+                                            "Insert_FEA_GL_credit_transaction_line": {
+                                                "type": "ServiceProvider",
+                                                "inputs": {
+                                                    "parameters": {
+                                                        "storedProcedureName": "taGLTransactionLineInsert",
+                                                        "storedProcedureParameters": {
+                                                            "I_vBACHNUMB": "@{item()['batchid']}",
+                                                            "I_vCRDTAMNT": "@{item()['totalamount']}",
+                                                            "I_vACTNUMST": "@{concat(item()['pics_gpfeaaccount'], '-', item()['pics_revenueaccount'], '-0000')}",
+                                                            "I_vJRNENTRY": "@{body('Get_next_FEA_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                            "I_vDEBITAMT": "@{0}"
+                                                        },
+                                                        "includeEmptyResultSets": false
+                                                    },
+                                                    "serviceProviderConfiguration": {
+                                                        "connectionName": "sql-8",
+                                                        "operationId": "executeStoredProcedure",
+                                                        "serviceProviderId": "/serviceProviders/sql"
+                                                    }
+                                                }
+                                            },
+                                            "Is_insert_FEA_GL_credit_transaction_succeeded": {
+                                                "type": "If",
+                                                "expression": {
+                                                    "and": [
+                                                        {
+                                                            "equals": [
+                                                                "@body('Insert_FEA_GL_credit_transaction_line')?['outputParameters']?['@O_iErrorState']",
+                                                                "@0"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "actions": {
+                                                    "Insert_FEA_GL_transaction_header": {
+                                                        "type": "ServiceProvider",
+                                                        "inputs": {
+                                                            "parameters": {
+                                                                "storedProcedureName": "taGLTransactionHeaderInsert",
+                                                                "storedProcedureParameters": {
+                                                                    "I_vAdjustment_Transaction": "@{0}",
+                                                                    "I_vCURNCYID": "Z-US$",
+                                                                    "I_vLedger_ID": "@{1}",
+                                                                    "I_vREFRENCE": "@{item()['batchid']}",
+                                                                    "I_vSOURCDOC": "GJ",
+                                                                    "I_vTRXDATE": "@{formatDateTime(utcNow(), 'MM-dd-yyyy')}",
+                                                                    "I_vTRXTYPE": "@{0}",
+                                                                    "I_vJRNENTRY": "@{body('Get_next_FEA_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                                    "I_vBACHNUMB": "@{item()['batchid']}"
+                                                                },
+                                                                "includeEmptyResultSets": false
+                                                            },
+                                                            "serviceProviderConfiguration": {
+                                                                "connectionName": "sql-11",
+                                                                "operationId": "executeStoredProcedure",
+                                                                "serviceProviderId": "/serviceProviders/sql"
+                                                            }
+                                                        }
+                                                    },
+                                                    "Is_insert_FEA_GL_transaction_header_succeeded": {
+                                                        "type": "If",
+                                                        "expression": {
+                                                            "and": [
+                                                                {
+                                                                    "equals": [
+                                                                        "@body('Insert_FEA_GL_transaction_header')?['outputParameters']?['@O_iErrorState']",
+                                                                        "@0"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        "actions": {
+                                                            "Update_FEA_consolidate_claims_record_in_CRM": {
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "referenceName": "commondataservice-1"
+                                                                        }
+                                                                    },
+                                                                    "method": "patch",
+                                                                    "body": {
+                                                                        "statuscode": 456010000
+                                                                    },
+                                                                    "headers": {
+                                                                        "prefer": "return=representation,odata.include-annotations=*",
+                                                                        "accept": "application/json;odata.metadata=full",
+                                                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                                                    },
+                                                                    "path": "/api/data/v9.1/@{encodeURIComponent('po_consolidateclaimses')}(@{encodeURIComponent(item()?['po_consolidateclaimsid'])})"
+                                                                }
+                                                            }
+                                                        },
+                                                        "else": {
+                                                            "actions": {
+                                                                "Log_insert_FEA_GL_transaction_header_error": {
+                                                                    "type": "ServiceProvider",
+                                                                    "inputs": {
+                                                                        "parameters": {
+                                                                            "entityName": "integrationslog",
+                                                                            "message": {
+                                                                                "contentData": {
+                                                                                    "workflowName": "@{workflow().name}",
+                                                                                    "runId": "@{workflow().run.name}",
+                                                                                    "source": "dataverse",
+                                                                                    "sourceEntity": "po_consolidateclaims",
+                                                                                    "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                                                    "target": "gpfea",
+                                                                                    "targetEntity": "gltransactionheader",
+                                                                                    "targetId": "@{body('Get_next_FEA_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}",
+                                                                                    "timestamp": "@{utcNow()}",
+                                                                                    "logLevel": "Error",
+                                                                                    "message": "@{replace(trim(body('Insert_FEA_GL_transaction_header')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                                },
+                                                                                "contentType": "@item()?['contentType']",
+                                                                                "sessionId": "econnect",
+                                                                                "correlationId": "@item()['batchid']"
+                                                                            }
+                                                                        },
+                                                                        "serviceProviderConfiguration": {
+                                                                            "connectionName": "serviceBus",
+                                                                            "operationId": "sendMessage",
+                                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {
+                                                            "Insert_FEA_GL_transaction_header": [
+                                                                "SUCCEEDED"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "else": {
+                                                    "actions": {
+                                                        "Log_insert_FEA_GL_credit_transaction_line_error": {
+                                                            "type": "ServiceProvider",
+                                                            "inputs": {
+                                                                "parameters": {
+                                                                    "entityName": "integrationslog",
+                                                                    "message": {
+                                                                        "contentData": {
+                                                                            "workflowName": "@{workflow().name}",
+                                                                            "runId": "@{workflow().run.name}",
+                                                                            "source": "dataverse",
+                                                                            "sourceEntity": "po_consolidateclaims",
+                                                                            "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                                            "target": "gpfea",
+                                                                            "targetEntity": "gltransactionline",
+                                                                            "targetId": "@{body('Get_next_FEA_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}|CREDIT",
+                                                                            "timestamp": "@{utcNow()}",
+                                                                            "logLevel": "Error",
+                                                                            "message": "@{replace(trim(body('Insert_FEA_GL_credit_transaction_line')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                        },
+                                                                        "contentType": "@item()?['contentType']",
+                                                                        "sessionId": "econnect",
+                                                                        "correlationId": "@item()['batchid']"
+                                                                    }
+                                                                },
+                                                                "serviceProviderConfiguration": {
+                                                                    "connectionName": "serviceBus",
+                                                                    "operationId": "sendMessage",
+                                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "runAfter": {
+                                                    "Insert_FEA_GL_credit_transaction_line": [
+                                                        "SUCCEEDED"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "else": {
+                                            "actions": {
+                                                "Log_insert_FEA_GL_debit_transaction_line_error": {
+                                                    "type": "ServiceProvider",
+                                                    "inputs": {
+                                                        "parameters": {
+                                                            "entityName": "integrationslog",
+                                                            "message": {
+                                                                "contentData": {
+                                                                    "workflowName": "@{workflow().name}",
+                                                                    "runId": "@{workflow().run.name}",
+                                                                    "source": "dataverse",
+                                                                    "sourceEntity": "po_consolidateclaims",
+                                                                    "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                                    "target": "gpfea",
+                                                                    "targetEntity": "gltransactionline",
+                                                                    "targetId": "@{body('Get_next_FEA_GL_number')?['outputParameters']?['@IO_iOUTJournalEntry']}|DEBIT",
+                                                                    "timestamp": "@{utcNow()}",
+                                                                    "logLevel": "Error",
+                                                                    "message": "@{replace(trim(body('Insert_FEA_GL_debit_transaction_line')?['outputParameters']?['@oErrString']),' ',',')}"
+                                                                },
+                                                                "contentType": "@item()?['contentType']",
+                                                                "sessionId": "econnect",
+                                                                "correlationId": "@item()['batchid']"
+                                                            }
+                                                        },
+                                                        "serviceProviderConfiguration": {
+                                                            "connectionName": "serviceBus",
+                                                            "operationId": "sendMessage",
+                                                            "serviceProviderId": "/serviceProviders/serviceBus"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Insert_FEA_GL_debit_transaction_line": [
+                                                "SUCCEEDED"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Log_get_next_FEA_GL_number_error": {
+                                            "type": "ServiceProvider",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "entityName": "integrationslog",
+                                                    "message": {
+                                                        "contentData": {
+                                                            "workflowName": "@{workflow().name}",
+                                                            "runId": "@{workflow().run.name}",
+                                                            "source": "dataverse",
+                                                            "sourceEntity": "po_consolidateclaims",
+                                                            "sourceId": "@{item()?['po_consolidateclaimsid']}",
+                                                            "target": "gpfea",
+                                                            "targetEntity": "glGetNextJournalEntry",
+                                                            "targetId": "",
+                                                            "timestamp": "@{utcNow()}",
+                                                            "logLevel": "Error",
+                                                            "message": "Error getting next GL transaction number"
+                                                        },
+                                                        "contentType": "@item()?['contentType']",
+                                                        "sessionId": "logger",
+                                                        "correlationId": "@item()['batchid']"
+                                                    }
+                                                },
+                                                "serviceProviderConfiguration": {
+                                                    "connectionName": "serviceBus",
+                                                    "operationId": "sendMessage",
+                                                    "serviceProviderId": "/serviceProviders/serviceBus"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Get_next_FEA_GL_number": [
+                                        "SUCCEEDED"
+                                    ]
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "runAfter": {
+                            "Is_PICS_claim": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Parse_claims": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Run_daily_at_7_am": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "startTime": "2025-04-02T13:00:00Z"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 1
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

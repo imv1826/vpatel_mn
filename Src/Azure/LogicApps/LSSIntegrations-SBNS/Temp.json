@@ -1,0 +1,100 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Call_workflow_in_this_logic_app": {
+                "type": "Workflow",
+                "inputs": {
+                    "host": {
+                        "workflow": {
+                            "id": "Staging-CRM2STG-BulkSync"
+                        }
+                    },
+                    "body": {
+                        "tableName": "salesorder",
+                        "collectionName": "salesorders",
+                        "primaryAttribute": "salesorderid"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Call_workflow_in_this_logic_app_1": {
+                "type": "Workflow",
+                "inputs": {
+                    "host": {
+                        "workflow": {
+                            "id": "Staging-CRM2STG-BulSync-Copy"
+                        }
+                    },
+                    "body": {
+                        "tableName": "salesorderdetail",
+                        "collectionName": "salesorderdetails",
+                        "primaryAttribute": "salesorderdetailid"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Call_workflow_in_this_logic_app_2": {
+                "type": "Workflow",
+                "inputs": {
+                    "host": {
+                        "workflow": {
+                            "id": "Staging-CRM2STG-BulkCopy2"
+                        }
+                    },
+                    "body": {
+                        "tableName": "pics_fee",
+                        "collectionName": "pics_fees",
+                        "primaryAttribute": "pics_feeid"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Call_workflow_in_this_logic_app_3": {
+                "type": "Workflow",
+                "inputs": {
+                    "host": {
+                        "workflow": {
+                            "id": "Staging-CRM2STG-BulkSync-Copy3"
+                        }
+                    },
+                    "body": {
+                        "tableName": "new_timecard",
+                        "collectionName": "new_timecards",
+                        "primaryAttribute": "new_timecardid"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Call_workflow_in_this_logic_app_4": {
+                "type": "Workflow",
+                "inputs": {
+                    "host": {
+                        "workflow": {
+                            "id": "Staging-CRM2STG-BulkCopy"
+                        }
+                    },
+                    "body": {
+                        "tableName": "new_timeentrydetail",
+                        "collectionName": "new_timeentrydetails",
+                        "primaryAttribute": "new_timeentrydetailid"
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 50,
+                    "frequency": "Minute",
+                    "startTime": "2025-01-15T05:16:00Z"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

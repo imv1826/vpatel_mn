@@ -1,0 +1,245 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Insert_New_Log": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "tableName": "LogsIntegration",
+                        "entity": {
+                            "PartitionKey": "@body('Parse_Message_JSON')?['sourceId']",
+                            "RowKey": "@join(createArray(variables('rowKeyPrefix'), body('Parse_Message_JSON')?['timestamp']), '|')",
+                            "Timestamp": "@body('Parse_Message_JSON')?['timestamp']",
+                            "Level": "@body('Parse_Message_JSON')?['logLevel']",
+                            "ErrorMessage": "@body('Parse_Message_JSON')?['message']",
+                            "Status": "Error",
+                            "Source": "@body('Parse_Message_JSON')?['source']",
+                            "SourceEntity": "@body('Parse_Message_JSON')?['sourceEntity']",
+                            "SourceId": "@body('Parse_Message_JSON')?['sourceId']",
+                            "Target": "@body('Parse_Message_JSON')?['target']",
+                            "TargetEntity": "@body('Parse_Message_JSON')?['targetEntity']",
+                            "TargetId": "@body('Parse_Message_JSON')?['targetId']",
+                            "WorkflowName": "@body('Parse_Message_JSON')?['workflowName']",
+                            "RunId": "@body('Parse_Message_JSON')?['runId']"
+                        },
+                        "failIfEntityExists": true
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "azureTables-2",
+                        "operationId": "upsertEntity",
+                        "serviceProviderId": "/serviceProviders/azureTables"
+                    }
+                },
+                "runAfter": {
+                    "If_'logLevel'_is_not_Error": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Initialize_rowKeyPrefix": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "rowKeyPrefix",
+                            "type": "string",
+                            "value": "4"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Parse_Message_JSON": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "If_'logLevel'_is_not_Error": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "not": {
+                                "equals": [
+                                    "@body('Parse_Message_JSON')?['logLevel']",
+                                    "Error"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "actions": {
+                    "Switch_'logLevel'": {
+                        "type": "Switch",
+                        "expression": "@triggerBody()?['contentData']?['logLevel']",
+                        "default": {
+                            "actions": {
+                                "Set_rowKeyPrefix_4": {
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "rowKeyPrefix",
+                                        "value": "4"
+                                    }
+                                }
+                            }
+                        },
+                        "cases": {
+                            "Trace": {
+                                "actions": {
+                                    "Set_rowKeyPrefix_0": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "rowKeyPrefix",
+                                            "value": "0"
+                                        }
+                                    }
+                                },
+                                "case": "Trace"
+                            },
+                            "Debug": {
+                                "actions": {
+                                    "Set_rowKeyPrefix_1": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "rowKeyPrefix",
+                                            "value": "1"
+                                        }
+                                    }
+                                },
+                                "case": "Debug"
+                            },
+                            "Info": {
+                                "actions": {
+                                    "Set_rowKeyPrefix_2": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "rowKeyPrefix",
+                                            "value": "2"
+                                        }
+                                    }
+                                },
+                                "case": "Information"
+                            },
+                            "Warn": {
+                                "actions": {
+                                    "Set_rowKeyPrefix_3": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "rowKeyPrefix",
+                                            "value": "3"
+                                        }
+                                    }
+                                },
+                                "case": "Warning"
+                            },
+                            "Critical": {
+                                "actions": {
+                                    "Set_rowKeyPrefix_5": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "rowKeyPrefix",
+                                            "value": "5"
+                                        }
+                                    }
+                                },
+                                "case": "Critical"
+                            },
+                            "None": {
+                                "actions": {
+                                    "Set_rowKeyPrefix_6": {
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "rowKeyPrefix",
+                                            "value": "6"
+                                        }
+                                    }
+                                },
+                                "case": "None"
+                            }
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Initialize_rowKeyPrefix": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Parse_Message_JSON": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@triggerBody()?['contentData']",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "timestamp": {
+                                "type": "string"
+                            },
+                            "logLevel": {
+                                "type": "string"
+                            },
+                            "message": {
+                                "type": "string"
+                            },
+                            "source": {
+                                "type": "string"
+                            },
+                            "sourceEntity": {
+                                "type": "string"
+                            },
+                            "sourceId": {
+                                "type": "string"
+                            },
+                            "target": {
+                                "type": "string"
+                            },
+                            "targetEntity": {
+                                "type": "string"
+                            },
+                            "targetId": {
+                                "type": "string"
+                            },
+                            "workflowId": {},
+                            "runId": {}
+                        }
+                    }
+                },
+                "runAfter": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "On_new_messages_from_queue_session_'logger'": {
+                "type": "ServiceProvider",
+                "kind": "Polling",
+                "inputs": {
+                    "parameters": {
+                        "queueName": "integrationslog",
+                        "sessionId": "logger",
+                        "maxMessages": 10
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "serviceBus",
+                        "operationId": "onNewMessagesFromQueueSession",
+                        "serviceProviderId": "/serviceProviders/serviceBus"
+                    }
+                },
+                "recurrence": {
+                    "interval": 5,
+                    "frequency": "Second"
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "runs": 10
+                    }
+                },
+                "splitOn": "@triggerOutputs()?['body']"
+            }
+        }
+    },
+    "kind": "Stateful"
+}

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <LangVersion>7.3</LangVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.3" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\LSS.D365.CE.Common\LSS.D365.CE.Common.csproj" />
+      <ProjectReference Include="..\LSS.D365.CE.Models\LSS.D365.CE.Models.csproj" />
+    </ItemGroup>
+</Project>

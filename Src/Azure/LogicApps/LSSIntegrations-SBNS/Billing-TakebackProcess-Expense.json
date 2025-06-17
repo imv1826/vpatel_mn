@@ -1,0 +1,326 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each": {
+                "type": "Foreach",
+                "foreach": "@array(body('Execute_pLSS_TakeBackExpense'))[0]",
+                "actions": {
+                    "Parse_JSON": {
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@items('For_each')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "RecordType": {
+                                        "type": "string"
+                                    },
+                                    "claimid": {
+                                        "type": "string"
+                                    },
+                                    "new_expenseId": {
+                                        "type": "string"
+                                    },
+                                    "statecode": {
+                                        "type": "integer"
+                                    },
+                                    "new_name": {
+                                        "type": "string"
+                                    },
+                                    "new_Description": {
+                                        "type": "string"
+                                    },
+                                    "new_Rejectedreason": {},
+                                    "pics_BatchID": {
+                                        "type": "string"
+                                    },
+                                    "pics_CreatedByPortalUser": {},
+                                    "pics_DateSubmitted": {
+                                        "type": "string"
+                                    },
+                                    "pics_EndDate": {
+                                        "type": "string"
+                                    },
+                                    "pics_ErrorMessage": {},
+                                    "pics_InvoiceNumber": {
+                                        "type": "string"
+                                    },
+                                    "pics_ModifiedByPortaluser": {},
+                                    "pics_Origination": {
+                                        "type": "string"
+                                    },
+                                    "pics_PortalStatus": {},
+                                    "pics_Quantity": {
+                                        "type": "integer"
+                                    },
+                                    "pics_StartDate": {
+                                        "type": "string"
+                                    },
+                                    "pics_TotalAmount": {
+                                        "type": "integer"
+                                    },
+                                    "pics_VoucherNumber": {
+                                        "type": "string"
+                                    },
+                                    "new_clientid": {
+                                        "type": "string"
+                                    },
+                                    "new_budgetlineid": {
+                                        "type": "string"
+                                    },
+                                    "new_paytoid": {
+                                        "type": "string"
+                                    },
+                                    "pics_ServiceAgreementId": {
+                                        "type": "string"
+                                    },
+                                    "pics_Fee": {
+                                        "type": "integer"
+                                    },
+                                    "pics_OriginalVoucherNumber": {},
+                                    "pics_HideSSReport": {
+                                        "type": "integer"
+                                    },
+                                    "new_ExpenseAmount": {
+                                        "type": "integer"
+                                    },
+                                    "OwnerId": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Update_expense": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statecode": 1
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['new_expenseId']))})"
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_claim": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statuscode": "@if(and(or(equals(trim(body('Parse_JSON')?['RecordType']), 'Original'),equals(trim(body('Parse_JSON')?['RecordType']), 'OriginalFee')),equals(body('Get_a_row_by_ID')?['statecode'], 0)), 456010013, body('Get_a_row_by_ID')?['statecode'])"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['claimid']))})"
+                        },
+                        "runAfter": {
+                            "Get_a_row_by_ID": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_new_expense": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "new_budgetlineid@odata.bind": "/new_serviceagreementdetails(@{body('Parse_JSON')?['new_budgetlineid']})",
+                                "new_clientid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_clientid']})",
+                                "new_description": "@body('Parse_JSON')?['new_Description']",
+                                "new_expenseamount": "@mul(body('Parse_JSON')?['new_ExpenseAmount'], -1)",
+                                "pics_startdate": "@body('Parse_JSON')?['pics_StartDate']",
+                                "pics_invoicenumber": "@body('Parse_JSON')?['pics_InvoiceNumber']",
+                                "new_paytoid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_paytoid']})",
+                                "pics_serviceagreementid@odata.bind": "/new_serviceagreements(@{body('Parse_JSON')?['pics_ServiceAgreementId']})"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}"
+                        },
+                        "runAfter": {
+                            "Update_expense-copy": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_expense-copy": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "statuscode": 456010006
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['new_expenseId']))})"
+                        },
+                        "runAfter": {
+                            "Update_claim": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Get_a_row_by_ID": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com/"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('salesorders'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON')?['claimid']))})",
+                            "queries": {
+                                "$select": "statecode"
+                            }
+                        },
+                        "runAfter": {
+                            "Update_expense": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Add_a_new_expense_2": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "post",
+                            "body": {
+                                "new_budgetlineid@odata.bind": "/new_serviceagreementdetails(@{body('Parse_JSON')?['new_budgetlineid']})",
+                                "new_clientid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_clientid']})",
+                                "new_description": "@body('Parse_JSON')?['new_Description']",
+                                "new_expenseamount": "@body('Parse_JSON')?['new_ExpenseAmount']",
+                                "pics_startdate": "@body('Parse_JSON')?['pics_StartDate']",
+                                "pics_invoicenumber": "@body('Parse_JSON')?['pics_InvoiceNumber']",
+                                "new_paytoid@odata.bind": "/contacts(@{body('Parse_JSON')?['new_paytoid']})",
+                                "pics_serviceagreementid@odata.bind": "/new_serviceagreements(@{body('Parse_JSON')?['pics_ServiceAgreementId']})"
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}"
+                        },
+                        "runAfter": {
+                            "Add_a_new_expense": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Condition": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Execute_pLSS_TakeBackExpense": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "exec [PICS_CE_Staging].dbo.pLSS_TakeBackExpense;"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Condition": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('Execute_pLSS_TakeBackExpense'))",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Terminate": {
+                        "type": "Terminate",
+                        "inputs": {
+                            "runStatus": "Succeeded"
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Execute_pLSS_TakeBackExpense": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "schedule": {
+                        "hours": [
+                            3
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

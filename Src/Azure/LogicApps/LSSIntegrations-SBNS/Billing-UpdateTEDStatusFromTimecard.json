@@ -1,0 +1,129 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "List_timecards": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "commondataservice-1"
+                        }
+                    },
+                    "method": "get",
+                    "headers": {
+                        "prefer": "odata.include-annotations=*",
+                        "accept": "application/json;odata.metadata=full",
+                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                    },
+                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timecards'))}",
+                    "queries": {
+                        "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n<entity name=\"new_timecard\">\n<attribute name=\"new_name\"/>\n<attribute name=\"createdon\"/>\n<attribute name=\"pics_totalhours\"/>\n<attribute name=\"pics_totalearnings\"/>\n<attribute name=\"statuscode\"/>\n<attribute name=\"pics_payperiod\"/>\n<attribute name=\"pics_origination\"/>\n<attribute name=\"pics_gpcompany\"/>\n<attribute name=\"new_employeeid\"/>\n<attribute name=\"pics_datesubmitted\"/>\n<attribute name=\"pics_datepaid\"/>\n<attribute name=\"new_clientid\"/>\n<attribute name=\"new_timecardid\"/>\n<order attribute=\"new_name\" descending=\"false\"/>\n<filter type=\"and\">\n<filter type=\"or\">\n<condition attribute=\"statuscode\" operator=\"eq\" value=\"100000001\"/>\n<condition attribute=\"statuscode\" operator=\"eq\" value=\"450010002\"/>\n</filter>\n<condition attribute=\"pics_approveteds\" operator=\"eq\" value=\"1\"/>\n</filter>\n</entity>\n</fetch>"
+                    }
+                },
+                "runAfter": {}
+            },
+            "For_each_timecard": {
+                "type": "foreach",
+                "foreach": "@body('List_timecards')?['value']",
+                "actions": {
+                    "List_time_entry_details": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "get",
+                            "headers": {
+                                "prefer": "odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}",
+                            "queries": {
+                                "fetchXml": "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n<entity name=\"new_timeentrydetail\">\n<attribute name=\"new_name\"/>\n<attribute name=\"createdon\"/>\n<attribute name=\"statuscode\"/>\n<attribute name=\"new_starttimeanddate\"/>\n<attribute name=\"new_endtimeanddate\"/>\n<attribute name=\"new_employeeid\"/>\n<attribute name=\"new_totalcost\"/>\n<attribute name=\"new_timeentrydetailid\"/>\n<order attribute=\"new_name\" descending=\"false\"/>\n<filter type=\"and\">\n<condition attribute=\"new_timecardid\" operator=\"eq\" uiname=\"{TimeCard}\" uitype=\"new_timecard\" value=\"{@{item()?['new_timecardid']}}\"/>\n</filter>\n</entity>\n</fetch>"
+                            }
+                        }
+                    },
+                    "For_each_time_entry_details": {
+                        "type": "foreach",
+                        "foreach": "@body('List_time_entry_details')?['value']",
+                        "actions": {
+                            "Update_time_entry_detail": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "commondataservice-1"
+                                        }
+                                    },
+                                    "method": "patch",
+                                    "body": {
+                                        "new_payrollstatus": 100000000,
+                                        "statuscode": 100000001
+                                    },
+                                    "headers": {
+                                        "prefer": "return=representation,odata.include-annotations=*",
+                                        "accept": "application/json;odata.metadata=full",
+                                        "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                    },
+                                    "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_timeentrydetailid']))})"
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "List_time_entry_details": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    },
+                    "Update_a_timecard": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "commondataservice-1"
+                                }
+                            },
+                            "method": "patch",
+                            "body": {
+                                "pics_approveteds": false
+                            },
+                            "headers": {
+                                "prefer": "return=representation,odata.include-annotations=*",
+                                "accept": "application/json;odata.metadata=full",
+                                "organization": "https://lssmndryrun2.crm.dynamics.com"
+                            },
+                            "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timecards'))}(@{encodeURIComponent(encodeURIComponent(item()?['new_timecardid']))})"
+                        },
+                        "runAfter": {
+                            "For_each_time_entry_details": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "List_timecards": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 2,
+                    "frequency": "Hour",
+                    "timeZone": "Central Standard Time"
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

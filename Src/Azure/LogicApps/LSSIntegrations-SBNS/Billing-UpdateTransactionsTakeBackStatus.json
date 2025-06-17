@@ -1,0 +1,383 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Execute_query_fee": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "SELECT  c.SalesOrderId        ,\nf.pics_feeId AS xid        ,\n'Fee' AS type \nFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )         \nINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId         \nINNER JOIN PICS_CE_Staging.stg.pics_fee f WITH ( NOLOCK ) ON f.pics_feeId = cl.pics_FeeId \nWHERE   c.StatusCode = 456010015         \nAND f.statuscode <> 456010002        \nAND f.pics_feeId NOT IN (         \n\tSELECT  f.pics_feeId         \n\tFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )                 \n\tINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId                                                              \n\tAND ( c.StatusCode = 100000009 OR c.StatusCode = 456010011 OR c.StatusCode = 100000007)                 \n\tINNER JOIN PICS_CE_Staging.stg.pics_fee f WITH ( NOLOCK ) ON f.pics_feeId = cl.pics_FeeId         \n\tWHERE   f.statuscode <> 456010002 \n);"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {}
+            },
+            "Check_for_fees": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('Execute_query_fee'))",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {},
+                "else": {
+                    "actions": {
+                        "For_each_fee": {
+                            "type": "Foreach",
+                            "foreach": "@first(body('Execute_query_fee'))",
+                            "actions": {
+                                "Update_a_fee": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "patch",
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('pics_fees'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON_Fee')?['xid']))})"
+                                    },
+                                    "runAfter": {
+                                        "Parse_JSON_Fee": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                },
+                                "Parse_JSON_Fee": {
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@items('For_each_fee')",
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "SalesOrderId": {
+                                                    "type": "string"
+                                                },
+                                                "xid": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Execute_query_fee": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Execute_query_TED": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "SELECT  c.SalesOrderId,\nted.new_timeentrydetailId AS xid        ,\n'TED' AS type \nFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )         \nINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId         \nINNER JOIN PICS_CE_Staging.stg.new_timeentrydetail ted WITH ( NOLOCK ) ON ted.new_timeentrydetailId = cl.new_timeentrydetailid \nWHERE   c.StatusCode = 456010015         \nAND ted.statuscode <> 456010002         \nAND ted.new_timeentrydetailId NOT IN (         \n\tSELECT DISTINCT                 \n\t\tted.new_timeentrydetailId AS xid         \n\t\tFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )                 \n\t\tINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId     \n\t\tAND ( c.StatusCode = 100000009                                                               \n\t\tOR c.StatusCode = 456010011                                                               \n\t\tOR c.StatusCode = 100000007)                 \n\tINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail clx WITH ( NOLOCK ) ON cl.SalesOrderDetailId = clx.SalesOrderDetailId                 \n\tINNER JOIN PICS_CE_Staging.stg.new_timeentrydetail ted ON ted.new_timeentrydetailId = clx.new_timeentrydetailid                 \n\tINNER JOIN PICS_CE_Staging.stg.new_timeentrydetail td WITH ( NOLOCK ) ON td.new_timeentrydetailId = ted.new_timeentrydetailId         \n\tWHERE   td.statuscode <> 456010002 \n);"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Check_for_fees": [
+                        "SUCCEEDED",
+                        "FAILED"
+                    ]
+                }
+            },
+            "Check_for_TEDs": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('Execute_query_TED'))",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {},
+                "else": {
+                    "actions": {
+                        "For_each_TEDs": {
+                            "type": "Foreach",
+                            "foreach": "@first(body('Execute_query_TED'))",
+                            "actions": {
+                                "Parse_JSON_TED": {
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@items('For_each_TEDs')",
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "SalesOrderId": {
+                                                    "type": "string"
+                                                },
+                                                "xid": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "Update_a_TED": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "patch",
+                                        "body": "@body('Parse_JSON_TED')?['type']",
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_timeentrydetails'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON_TED')?['xid']))})"
+                                    },
+                                    "runAfter": {
+                                        "Parse_JSON_TED": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Execute_query_TED": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Execute_query_Mileage": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "SELECT  c.SalesOrderId        ,\nm.new_mileageentryId AS xid        ,\n'Mil' AS type \nFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )         \nINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId         \nINNER JOIN PICS_CE_Staging.stg.new_mileageentry m WITH ( NOLOCK ) ON m.new_mileageentryId = cl.new_mileageid\nWHERE   c.StatusCode = 456010015         \nAND m.statuscode <> 456010008         \nAND m.new_mileageentryId NOT IN (\n\tSELECT  m.new_mileageentryId         \n\tFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )                 \n\tINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId                                                              \n\tAND ( c.StatusCode = 100000009  OR c.StatusCode = 456010011 OR c.StatusCode = 100000007)                 \n\tINNER JOIN PICS_CE_Staging.stg.new_mileageentry m WITH ( NOLOCK ) ON m.new_mileageentryId = cl.new_mileageid        \n\tWHERE   m.statuscode <> 456010008 \n);"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Check_for_TEDs": [
+                        "SUCCEEDED",
+                        "FAILED"
+                    ]
+                }
+            },
+            "Check_for_Mileage": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('Execute_query_Mileage'))",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {},
+                "else": {
+                    "actions": {
+                        "For_each_Mileage": {
+                            "type": "Foreach",
+                            "foreach": "@first(body('Execute_query_Mileage'))",
+                            "actions": {
+                                "Parse_JSON_Mileage": {
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@items('For_each_Mileage')",
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "SalesOrderId": {
+                                                    "type": "string"
+                                                },
+                                                "xid": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "Update_a_Mileage": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "patch",
+                                        "body": "@body('Parse_JSON_Mileage')?['type']",
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_mileageentries'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON_Mileage')?['xid']))})"
+                                    },
+                                    "runAfter": {
+                                        "Parse_JSON_Mileage": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Execute_query_Mileage": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Execute_query_Expense": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "query": "SELECT  c.SalesOrderId        ,\ne.new_expenseId AS xid        ,\n'Exp' AS type \nFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )         \nINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId         \nINNER JOIN PICS_CE_Staging.stg.new_expense e WITH ( NOLOCK ) ON e.new_expenseId = cl.new_expenseid \nWHERE   c.StatusCode = 456010015         \nAND e.statuscode <> 456010008         \nAND e.new_expenseId NOT IN (        \n\tSELECT  e.new_expenseId         \n\tFROM    PICS_CE_Staging.stg.SalesOrder c WITH ( NOLOCK )                 \n\tINNER JOIN PICS_CE_Staging.stg.SalesOrderDetail cl WITH ( NOLOCK ) ON c.SalesOrderId = cl.SalesOrderId                                                              \n\tAND ( c.StatusCode = 100000009                                                               \n\tOR c.StatusCode = 456010011                                                               \n\tOR c.StatusCode = 100000007                                                               )                 \n\tINNER JOIN PICS_CE_Staging.stg.new_expense e WITH ( NOLOCK ) ON e.new_expenseId = cl.new_expenseid         \n\tWHERE   e.statuscode <> 456010008 \n);"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "sql-6",
+                        "operationId": "executeQuery",
+                        "serviceProviderId": "/serviceProviders/sql"
+                    }
+                },
+                "runAfter": {
+                    "Check_for_Mileage": [
+                        "SUCCEEDED",
+                        "FAILED"
+                    ]
+                }
+            },
+            "Condition_Expense": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@length(body('Execute_query_Expense'))",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "actions": {},
+                "else": {
+                    "actions": {
+                        "For_each_Expense": {
+                            "type": "Foreach",
+                            "foreach": "@first(body('Execute_query_Expense'))",
+                            "actions": {
+                                "Parse_JSON_Expense": {
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@items('For_each_Expense')",
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "SalesOrderId": {
+                                                    "type": "string"
+                                                },
+                                                "xid": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "Update_an_expense": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "commondataservice-1"
+                                            }
+                                        },
+                                        "method": "patch",
+                                        "body": "@body('Parse_JSON_Mileage')?['type']",
+                                        "headers": {
+                                            "prefer": "return=representation,odata.include-annotations=*",
+                                            "accept": "application/json;odata.metadata=full",
+                                            "organization": "https://lssmndryrun2.crm.dynamics.com"
+                                        },
+                                        "path": "/api/data/v9.1/@{encodeURIComponent(encodeURIComponent('new_expenses'))}(@{encodeURIComponent(encodeURIComponent(body('Parse_JSON_Expense')?['xid']))})"
+                                    },
+                                    "runAfter": {
+                                        "Parse_JSON_Expense": [
+                                            "SUCCEEDED"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Execute_query_Expense": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "Central Standard Time",
+                    "schedule": {
+                        "hours": [
+                            3
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}
